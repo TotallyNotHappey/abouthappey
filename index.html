@@ -346,38 +346,12 @@
       height: 80px;
       border-radius: 10px;
       cursor: pointer;
-      border: 2px solid #00eaff;
-      box-shadow: 0 0 15px rgba(0, 234, 255, 0.7);
-      transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+      transition: transform 0.3s ease;
       z-index: 10000;
     }
 
-    #interactiveGif:hover:not(.cooldown) {
+    #interactiveGif:hover {
       transform: scale(1.1);
-      box-shadow: 0 0 20px rgba(0, 234, 255, 1);
-    }
-
-    #interactiveGif.cooldown {
-      filter: grayscale(1) brightness(0.5);
-      cursor: not-allowed;
-    }
-
-    /* Cooldown timer */
-    .cooldown-timer {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 14px;
-      font-weight: bold;
-      color: #00eaff;
-      text-shadow: 0 0 5px black;
-      z-index: 10001;
-      display: none;
-    }
-
-    #interactiveGif.cooldown .cooldown-timer {
-      display: block;
     }
 
     /* Deltarune-style Text Box */
@@ -470,10 +444,7 @@
   </div>
 
   <!-- Interactive GIF -->
-  <div id="interactiveGifContainer">
-    <img id="interactiveGif" src="guy.gif" alt="Click me!">
-    <div class="cooldown-timer" id="cooldownTimer">5</div>
-  </div>
+  <img id="interactiveGif" src="guy.gif" alt="Click me!">
 
   <!-- Deltarune-style Text Box -->
   <div id="textBox">
@@ -518,7 +489,6 @@
     // Interactive GIF functionality with cooldown
     let isCooldown = false;
     let cooldownTime = 5; // seconds
-    let cooldownInterval;
 
     document.getElementById('interactiveGif').addEventListener('click', function() {
       if (isCooldown) return;
@@ -529,24 +499,10 @@
 
     function startCooldown() {
       isCooldown = true;
-      const gif = document.getElementById('interactiveGif');
-      const timer = document.getElementById('cooldownTimer');
       
-      gif.classList.add('cooldown');
-      
-      let timeLeft = cooldownTime;
-      timer.textContent = timeLeft;
-      
-      cooldownInterval = setInterval(() => {
-        timeLeft--;
-        timer.textContent = timeLeft;
-        
-        if (timeLeft <= 0) {
-          clearInterval(cooldownInterval);
-          isCooldown = false;
-          gif.classList.remove('cooldown');
-        }
-      }, 1000);
+      setTimeout(() => {
+        isCooldown = false;
+      }, cooldownTime * 1000);
     }
 
     // Text box functionality
