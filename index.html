@@ -254,18 +254,18 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* Audio Player Styles */
+    /* Audio Player Styles - FIXED POSITION */
     #audioPlayer {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 300px;
-      background: rgba(0, 0, 0, 0.95);
-      border-radius: 15px;
-      padding: 15px;
-      box-shadow: 0 5px 25px rgba(0, 234, 255, 0.5);
-      z-index: 10000;
-      border: 2px solid #00eaff;
+      position: fixed !important;
+      bottom: 20px !important;
+      right: 20px !important;
+      width: 300px !important;
+      background: rgba(0, 0, 0, 0.95) !important;
+      border-radius: 15px !important;
+      padding: 15px !important;
+      box-shadow: 0 5px 25px rgba(0, 234, 255, 0.5) !important;
+      z-index: 10000 !important;
+      border: 2px solid #00eaff !important;
     }
     
     .player-controls {
@@ -354,20 +354,6 @@
       text-align: center;
       border: 1px solid #00eaff;
     }
-    
-    /* Additional content to demonstrate fixed position */
-    .extra-content {
-      height: 1200px;
-      padding: 20px;
-      margin-top: 20px;
-      text-align: center;
-      color: #fff;
-    }
-    
-    .extra-content h2 {
-      color: #00eaff;
-      margin-bottom: 20px;
-    }
   </style>
 </head>
 
@@ -402,20 +388,6 @@
 
         <div class="outline">
           <a href="https://www.youtube.com/@TotallyNotHappey" class="anchor" style="color: #fff;">YouTube</a>
-        </div>
-      </div>
-
-      <!-- Additional content to demonstrate fixed position -->
-      <div class="extra-content">
-        <h2>Scroll down - the audio player stays fixed in position</h2>
-        <p>No matter how far you scroll, the audio player will remain in the bottom right corner of the screen.</p>
-        <p>Keep scrolling to test it...</p>
-        <div style="margin-top: 50px;">
-          <p>More content here...</p>
-          <p>Even more content...</p>
-          <p>Still scrolling...</p>
-          <p>Almost there...</p>
-          <p>Last bit of content...</p>
         </div>
       </div>
 
