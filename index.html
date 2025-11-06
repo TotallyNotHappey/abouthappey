@@ -14,6 +14,109 @@
   <meta property="og:url" content="https://totallynothappey.github.io/happey.github.io/" />
 
   <title>Happey</title>
+  
+  <style>
+    /* Audio Player Styles */
+    #audioPlayer {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 300px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 15px;
+      padding: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      border: 1px solid #00eaff;
+    }
+    
+    .player-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+    
+    .play-btn {
+      background: #00eaff;
+      color: #000;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.3s ease;
+    }
+    
+    .play-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 10px #00eaff;
+    }
+    
+    .volume-control {
+      display: flex;
+      align-items: center;
+      width: 60%;
+    }
+    
+    .volume-slider {
+      width: 100%;
+      margin-left: 10px;
+      -webkit-appearance: none;
+      height: 5px;
+      border-radius: 5px;
+      background: #333;
+      outline: none;
+    }
+    
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #00eaff;
+      cursor: pointer;
+    }
+    
+    /* Audio Visualizer Styles */
+    .visualizer-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin: 0 auto;
+    }
+    
+    #audioVisualizer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+    
+    .visualizer-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #00eaff;
+      font-size: 12px;
+      text-align: center;
+    }
+  </style>
 </head>
 
 <body id="body">
@@ -55,6 +158,22 @@
   </div>
 
   <!-- Audio Player -->
+  <div id="audioPlayer">
+    <div class="player-controls">
+      <button id="playBtn" class="play-btn">▶</button>
+      <div class="volume-control">
+        <span>🔊</span>
+        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="0.5">
+      </div>
+    </div>
+    
+    <div class="visualizer-container">
+      <canvas id="audioVisualizer"></canvas>
+      <div class="visualizer-center">Audio Visualizer</div>
+    </div>
+  </div>
+
+  <!-- Audio Element -->
   <audio id="bgAudio" loop>
     <source src="RUSHER.mp3" type="audio/mpeg">
     Your browser does not support the audio element.
@@ -69,10 +188,99 @@
       document.getElementById(idToShow).style.display = 'block';
     }
 
-    // Optional: Auto-play audio if allowed
+    // Audio player functionality
     window.addEventListener('DOMContentLoaded', () => {
       const audio = document.getElementById('bgAudio');
-      // Audio autoplay requires user interaction on most browsers
+      const playBtn = document.getElementById('playBtn');
+      const volumeSlider = document.getElementById('volumeSlider');
+      const canvas = document.getElementById('audioVisualizer');
+      const ctx = canvas.getContext('2d');
+      
+      // Set canvas dimensions
+      canvas.width = 200;
+      canvas.height = 200;
+      
+      // Audio context for visualization
+      let audioContext, analyser, source, dataArray;
+      
+      // Initialize audio context
+      function initAudioContext() {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioContext.createAnalyser();
+          source = audioContext.createMediaElementSource(audio);
+          source.connect(analyser);
+          analyser.connect(audioContext.destination);
+          
+          analyser.fftSize = 256;
+          const bufferLength = analyser.frequencyBinCount;
+          dataArray = new Uint8Array(bufferLength);
+        }
+      }
+      
+      // Play/Pause functionality
+      playBtn.addEventListener('click', () => {
+        if (audio.paused) {
+          audio.play();
+          playBtn.textContent = '❚❚';
+          initAudioContext();
+        } else {
+          audio.pause();
+          playBtn.textContent = '▶';
+        }
+      });
+      
+      // Volume control
+      volumeSlider.addEventListener('input', () => {
+        audio.volume = volumeSlider.value;
+      });
+      
+      // Audio visualizer
+      function drawVisualizer() {
+        if (!analyser) return;
+        
+        requestAnimationFrame(drawVisualizer);
+        
+        analyser.getByteFrequencyData(dataArray);
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = 70;
+        const bars = 60;
+        const barWidth = 2;
+        
+        for (let i = 0; i < bars; i++) {
+          const rad = (i / bars) * 2 * Math.PI;
+          const barHeight = (dataArray[i % dataArray.length] / 255) * 40;
+          
+          const x1 = centerX + Math.cos(rad) * radius;
+          const y1 = centerY + Math.sin(rad) * radius;
+          const x2 = centerX + Math.cos(rad) * (radius + barHeight);
+          const y2 = centerY + Math.sin(rad) * (radius + barHeight);
+          
+          // Create gradient for bars
+          const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+          gradient.addColorStop(0, '#00eaff');
+          gradient.addColorStop(1, '#0091ff');
+          
+          ctx.strokeStyle = gradient;
+          ctx.lineWidth = barWidth;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+      }
+      
+      // Start visualization when audio plays
+      audio.addEventListener('play', () => {
+        drawVisualizer();
+      });
+      
+      // Optional: Auto-play audio if allowed
+      // Note: Most browsers require user interaction for autoplay
       // You can attach play to a button if needed
       // Example: document.getElementById('playBtn').addEventListener('click', () => audio.play());
     });
