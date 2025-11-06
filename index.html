@@ -348,10 +348,13 @@
       cursor: pointer;
       transition: transform 0.3s ease;
       z-index: 10000;
+      border: 2px solid #00eaff;
+      box-shadow: 0 0 10px rgba(0, 234, 255, 0.7);
     }
 
     #interactiveGif:hover {
       transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(0, 234, 255, 0.9);
     }
 
     /* Deltarune-style Text Box */
@@ -393,6 +396,8 @@
       height: 100px;
       border-radius: 10px;
       overflow: hidden;
+      border: 2px solid #00eaff;
+      box-shadow: 0 0 10px rgba(0, 234, 255, 0.7);
     }
 
     .textBox-character img {
@@ -400,7 +405,7 @@
       height: 100%;
       object-fit: cover;
       margin: 0;
-      border-radius: 10px;
+      border-radius: 8px;
     }
 
     #textContent {
@@ -522,7 +527,7 @@
     document.getElementById('interactiveGif').addEventListener('click', function() {
       if (isCooldown) return;
       
-      showTextMessage("Hi there!");
+      showTextMessage("hi im spinning and im spinning yeah");
       startCooldown();
     });
 
