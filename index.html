@@ -1,251 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0091ff">
-
-  <link rel="icon" type="image/png" href="fav-icon.png">
-  
-  <meta property="og:title" content="Happey" />
-  <meta property="og:description" content="I like to animate and shit" />
-  <meta property="og:url" content="https://totallynothappey.github.io/happey.github.io/" />
-
   <title>Happey</title>
-  
   <style>
-    /* Reset and base styles */
+    /* Base styles */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
 
-    /*Font*/
-    @font-face {
-      font-family: 'Baloo 2';
-      font-weight: 800;
-      font-display: swap;
-      src: url(Righteous-Regular.woff) format('woff');
-    }
-
-    /*Container*/
-    .vbCon {
-      display: flex;
-      border: 0px;
-    }
-
-    .hCon {
-      display: block;
-      align-items: center;
-      border: 0px;
-      padding: 16px;
-      margin: 16px;
-    }
-
-    .hCon#border, .vbCon#border {
-      border: 1px #00eaff solid;
-      border-radius: 10px;
-    }
-
-    /*Button CSS*/
-    .anchor {
-      max-width: 100%;
-      height: 80px;
-      box-sizing: border-box;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      border-radius: 4px;
-      padding: 5px;
-      padding-bottom: 5px;
-      font-size: 120%;
-      word-break: break-word;
-      background: #00eaff;
-      color: #00eaff;
-      border: 0 solid transparent;
-      border-bottom: 5px solid #00eaff;
-      transition: background 0.1s ease, transform 0.1s ease, padding 0.1s ease;
-    }
-
-    .anchor:hover {
-      background: #00eaff;
-      border-bottom: 5px solid #00eaff;
-      transform: translateY(5px);
-    }
-
-    .anchor:active {
-      background: #00eaff;
-      border-bottom: 5px solid #00eaff;
-      color: #00eaff;
-      transform: scale(0.98);
-    }
-
-    /*Defaults*/
-    p, ul, ol, dl {
-      margin-bottom: 1em;
-      opacity: 1;
-    }
-
-    h1, h2, h3, h4, h5, h6, p, ul, ol, dl {
-      margin-left: 10px;
-      margin-right: 10px;
-    }
-
-    h1 {
-      color: #00eaff;
-    }
-
-    img {
-      max-width: 90%;
-      margin: 16px;
-      border-radius: 10px;
-      border: 0px #00eaff solid;
-      vertical-align: top;
-      transition: transform 0.2s ease;
-    }
-
-    img:hover {
-      transform: scale(1.025);
-    }
-
-    img#small {
-      max-width: 60%;
-    }
-
-    img, .anchor {
-      box-shadow: 0px 10px 10px #00eaff88;
-    }
-
     body {
-      font-family: 'Baloo 2', 'Ubuntu', verdana, sans-serif;
+      font-family: Arial, sans-serif;
       line-height: 1.5;
-      background-image: linear-gradient(135deg, #00eaff, #00eaff);
-    }
-
-    html, body {
-      font-family: 'Baloo 2', 'Ubuntu', verdana, sans-serif;
-      color: #fff;
-      display: block;
-      height: 100%;
-    }
-
-    div {
-      margin: 0 auto;
-      max-width: 640px;
-    }
-
-    html,
-    body {
-      width: 100%;
-      max-width: 100%;
-      height: 100%;
-      padding: 0;
-      margin: 0;
-      overflow-x: hidden;
-      overflow-y: auto;
-      perspective: 200px;
-    }
-
-    body {
-      overflow: auto;
-      text-align: center;
-    }
-
-    a:link {
-      color: #00eaff;
-      text-decoration: none;
-      transition: 0.2s;
-    }
-
-    a:visited {
-      color: #00eaff;
-    }
-
-    a:hover, a:active {
-      color: #00eaff;
-    }
-
-    a img {
-      border: 0;
-    }
-
-    .anchor:hover, .anchor:active {
-      opacity: 1;
-    }
-
-    @media (min-height: 500px) {
-      body {
-        padding-top: 10vh;
-        padding-bottom: 10vh;
-        padding-left: 2vh;
-        padding-right: 2vh;
-      }
-    }
-
-    /*Div CSS*/
-    .div {
-      background: #00eaff;
-      border: 5px solid #00eaff;
-      border-radius: 10px;
-      width: 90%;
-      height: auto;
-      padding: 25px;
-      transform-style: preserve-3d;
-      transition: all 0.5s ease-in-out;
-    }
-
-    .div-line {
-      width: 90%;
-      height: 0vh;
-      border: 1px solid #00eaff;
-      margin-top: 10%;
-      margin-bottom: 10%;
-      border-radius: 100vh;
-      opacity: 1;
-    }
-
-    .div-line#bold {
-      border: 3px solid #00eaff;
-    }
-
-    /*Outline CSS*/
-    .outline {
-      padding: 0px;
-      margin-top: 1%;
-      margin-bottom: 1%;
-      margin-left: 1%;
-      margin-right: 1%;
-      width: 100%;
-      border-radius: 10px;
-      border: 0px #00eaff solid;
-    }
-
-    /*Fade-in*/
-    div {
-      animation: fadeInAnimation cubic-bezier(0.165, 0.84, 0.44, 1) 1s;
-      animation-iteration-count: 1;
-      animation-fill-mode: forwards;
-    }
-
-    @keyframes fadeInAnimation {
-      0% {
-        opacity: 0;
-        transform: scale(0.98);
-        transform: translateX(-10px)
-      }
-      100% {
-        opacity: 1;
-      }
-    }
-
-    /*BG ANIM*/
-    body {
       background: linear-gradient(135deg, #321e7f, #151b33);
       background-size: 800% 800%;
       animation: gradientShift 20s ease infinite;
+      color: #fff;
+      min-height: 150vh; /* Make page scrollable */
     }
 
     @keyframes gradientShift {
@@ -254,18 +28,53 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* Audio Player Styles - FIXED POSITION */
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      color: #00eaff;
+      margin-bottom: 20px;
+    }
+
+    .section {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #00eaff;
+    }
+
+    .btn {
+      display: inline-block;
+      background: #00eaff;
+      color: #000;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 10px;
+      transition: transform 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(2px);
+    }
+
+    /* Audio Player Styles - This will stay fixed */
     #audioPlayer {
-      position: fixed !important;
-      bottom: 20px !important;
-      right: 20px !important;
-      width: 300px !important;
-      background: rgba(0, 0, 0, 0.95) !important;
-      border-radius: 15px !important;
-      padding: 15px !important;
-      box-shadow: 0 5px 25px rgba(0, 234, 255, 0.5) !important;
-      z-index: 10000 !important;
-      border: 2px solid #00eaff !important;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 300px;
+      background: rgba(0, 0, 0, 0.95);
+      border-radius: 15px;
+      padding: 15px;
+      box-shadow: 0 5px 25px rgba(0, 234, 255, 0.5);
+      z-index: 10000;
+      border: 2px solid #00eaff;
     }
     
     .player-controls {
@@ -346,56 +155,38 @@
       height: 60px;
       background: rgba(0, 0, 0, 0.9);
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #00eaff;
-      font-size: 12px;
-      text-align: center;
       border: 1px solid #00eaff;
     }
   </style>
 </head>
-
-<body id="body">
-
-  <div class="center" style="margin-top: 40px;">
-
-    <!-- Pages container -->
-    <div id="homePage" class="page">
-
-      <h1>Happey</h1>
-
+<body>
+  <div class="container">
+    <h1>Happey</h1>
+    
+    <div class="section">
       <p>Enby that can animate on Roblox</p>
-
-      <div class="div-line" id="bold"></div>
-
-      <div class="hCon">
-        <p>Roblox Profile</p>
-        <div class="vbCon">
-          <div class="outline">
-            <a href="https://www.roblox.com/users/401257777/profile" class="anchor" style="color: #fff;">Roblox Profile</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="div-line"></div>
-
-      <div class="hCon" id="border">
-        <img src="profile.png" alt="Miau" id="small">
-
-        <p>This page is still in progress btw<br>Nothing much to show for now, but you can check my other socials here. Discord user is <strong>MaybeWasAngery</strong> btw</p>
-
-        <div class="outline">
-          <a href="https://www.youtube.com/@TotallyNotHappey" class="anchor" style="color: #fff;">YouTube</a>
-        </div>
-      </div>
-
     </div>
-
+    
+    <div class="section">
+      <p>Roblox Profile</p>
+      <a href="https://www.roblox.com/users/401257777/profile" class="btn">Roblox Profile</a>
+    </div>
+    
+    <div class="section">
+      <p>This page is still in progress btw<br>Nothing much to show for now, but you can check my other socials here. Discord user is <strong>MaybeWasAngery</strong> btw</p>
+      <a href="https://www.youtube.com/@TotallyNotHappey" class="btn">YouTube</a>
+    </div>
+    
+    <div class="section">
+      <p>Scroll down to see that the audio player stays fixed at the bottom right</p>
+      <p>More content...</p>
+      <p>Even more content...</p>
+      <p>Keep scrolling...</p>
+      <p>Almost there...</p>
+    </div>
   </div>
 
-  <!-- Audio Player (Fixed Position) -->
+  <!-- Audio Player -->
   <div id="audioPlayer">
     <div class="player-controls">
       <button id="playBtn" class="play-btn">▶</button>
@@ -407,7 +198,7 @@
     
     <div class="visualizer-container">
       <canvas id="audioVisualizer"></canvas>
-      <div class="visualizer-center">Audio Visualizer</div>
+      <div class="visualizer-center"></div>
     </div>
   </div>
 
@@ -417,17 +208,8 @@
     Your browser does not support the audio element.
   </audio>
 
-  <!-- Script -->
   <script>
-    function switchPage(idToShow) {
-      document.querySelectorAll('.page').forEach(page => {
-        page.style.display = 'none';
-      });
-      document.getElementById(idToShow).style.display = 'block';
-    }
-
-    // Audio player functionality
-    window.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
       const audio = document.getElementById('bgAudio');
       const playBtn = document.getElementById('playBtn');
       const volumeSlider = document.getElementById('volumeSlider');
@@ -518,7 +300,5 @@
       });
     });
   </script>
-
 </body>
-
 </html>
