@@ -18,13 +18,16 @@
   <style>
     /* Audio Player Styles */
     #audioPlayer {
-      width: 90%;
-      max-width: 500px;
-      background: rgba(0, 0, 0, 0.8);
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 300px;
+      background: rgba(0, 0, 0, 0.9);
       border-radius: 15px;
       padding: 15px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-      margin: 30px auto;
+      box-shadow: 0 5px 25px rgba(0, 234, 255, 0.3);
+      z-index: 1000;
+      backdrop-filter: blur(10px);
       border: 1px solid #00eaff;
     }
     
@@ -52,7 +55,7 @@
     
     .play-btn:hover {
       transform: scale(1.1);
-      box-shadow: 0 0 10px #00eaff;
+      box-shadow: 0 0 15px #00eaff;
     }
     
     .volume-control {
@@ -104,7 +107,7 @@
       transform: translate(-50%, -50%);
       width: 60px;
       height: 60px;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.8);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -112,11 +115,12 @@
       color: #00eaff;
       font-size: 12px;
       text-align: center;
+      border: 1px solid #00eaff;
     }
     
-    /* Additional content to demonstrate scrolling */
+    /* Additional content to demonstrate fixed position */
     .extra-content {
-      height: 800px;
+      height: 1200px;
       padding: 20px;
       margin-top: 20px;
       text-align: center;
@@ -164,31 +168,36 @@
         </div>
       </div>
 
-      <!-- Audio Player placed in the page flow -->
-      <div id="audioPlayer">
-        <div class="player-controls">
-          <button id="playBtn" class="play-btn">▶</button>
-          <div class="volume-control">
-            <span>🔊</span>
-            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="0.5">
-          </div>
-        </div>
-        
-        <div class="visualizer-container">
-          <canvas id="audioVisualizer"></canvas>
-          <div class="visualizer-center">Audio Visualizer</div>
-        </div>
-      </div>
-
-      <!-- Additional content to demonstrate scrolling -->
+      <!-- Additional content to demonstrate fixed position -->
       <div class="extra-content">
-        <h2>Scroll down to see the audio player scroll with the page</h2>
-        <p>This is extra content to demonstrate how the audio player is part of the page content and scrolls with it.</p>
-        <p>Keep scrolling...</p>
+        <h2>Scroll down - the audio player stays fixed in position</h2>
+        <p>No matter how far you scroll, the audio player will remain in the bottom right corner of the screen.</p>
+        <p>Keep scrolling to test it...</p>
+        <div style="margin-top: 50px;">
+          <p>More content here...</p>
+          <p>Even more content...</p>
+          <p>Still scrolling...</p>
+        </div>
       </div>
 
     </div>
 
+  </div>
+
+  <!-- Audio Player (Fixed Position) -->
+  <div id="audioPlayer">
+    <div class="player-controls">
+      <button id="playBtn" class="play-btn">▶</button>
+      <div class="volume-control">
+        <span>🔊</span>
+        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="0.5">
+      </div>
+    </div>
+    
+    <div class="visualizer-container">
+      <canvas id="audioVisualizer"></canvas>
+      <div class="visualizer-center">Audio Visualizer</div>
+    </div>
   </div>
 
   <!-- Audio Element -->
@@ -296,11 +305,6 @@
       audio.addEventListener('play', () => {
         drawVisualizer();
       });
-      
-      // Optional: Auto-play audio if allowed
-      // Note: Most browsers require user interaction for autoplay
-      // You can attach play to a button if needed
-      // Example: document.getElementById('playBtn').addEventListener('click', () => audio.play());
     });
   </script>
 
