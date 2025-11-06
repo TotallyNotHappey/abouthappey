@@ -506,9 +506,11 @@
     Your browser does not support the audio element.
   </audio>
 
-  <!-- Text Sound Effect -->
+  <!-- Text Sound Effect with fallback -->
   <audio id="textSound" preload="auto">
     <source src="text.mp3" type="audio/mpeg">
+    <source src="text.wav" type="audio/wav">
+    <source src="text.ogg" type="audio/ogg">
   </audio>
 
   <!-- Script -->
@@ -527,7 +529,7 @@
     document.getElementById('interactiveGif').addEventListener('click', function() {
       if (isCooldown) return;
       
-      showTextMessage("hi im spinning and im spinning yeah");
+      showTextMessage("Hi there!");
       startCooldown();
     });
 
@@ -539,7 +541,7 @@
       }, cooldownTime * 1000);
     }
 
-    // Text box functionality
+    // Text box functionality with improved sound handling
     function showTextMessage(message) {
       const textBox = document.getElementById('textBox');
       const textContent = document.getElementById('textContent');
@@ -554,10 +556,12 @@
       const typeWriter = () => {
         if (i < message.length) {
           textContent.textContent += message.charAt(i);
-          textSound.currentTime = 0;
-          textSound.play();
+          
+          // Try to play the text sound with error handling
+          playTextSound();
+          
           i++;
-          setTimeout(typeWriter, 100); // Adjust speed here
+          setTimeout(typeWriter, 100);
         } else {
           // Hide text box after 2.5 seconds
           setTimeout(() => {
@@ -567,6 +571,54 @@
       };
       
       typeWriter();
+    }
+
+    // Improved text sound function with fallback
+    function playTextSound() {
+      const textSound = document.getElementById('textSound');
+      
+      // Reset the audio to the beginning
+      textSound.currentTime = 0;
+      
+      // Try to play the sound
+      const playPromise = textSound.play();
+      
+      // If play fails, try to generate a fallback sound
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.log("Text sound failed, using fallback:", error);
+          playFallbackSound();
+        });
+      }
+    }
+
+    // Fallback sound using Web Audio API
+    function playFallbackSound() {
+      try {
+        // Create audio context
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        
+        // Create oscillator for beep sound
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        // Configure the beep
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 800; // Hz
+        gainNode.gain.value = 0.1; // Volume
+        
+        // Play short beep
+        oscillator.start();
+        setTimeout(() => {
+          oscillator.stop();
+        }, 50);
+      } catch (e) {
+        console.log("Fallback sound also failed:", e);
+      }
     }
 
     // Audio player functionality
