@@ -11,12 +11,7 @@
   <meta property="og:title" content="Happey" />
   <meta property="og:description" content="evil embed or smth lol" />
   <meta property="og:url" content="https://github.com/TotallyNotHappey/abouthappey" />
-  <meta property="og:image" content="https://raw.githubusercontent.com/TotallyNotHappey/abouthappey/main/hi.jpg" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Happey" />
 
   <title>Happey</title>
   
@@ -341,6 +336,98 @@
       border-radius: 4px 4px 0 0;
       transition: height 0.1s ease;
     }
+
+    /* Interactive GIF Styles */
+    #interactiveGif {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 80px;
+      height: 80px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 2px solid #00eaff;
+      box-shadow: 0 0 15px rgba(0, 234, 255, 0.7);
+      transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+      z-index: 10000;
+    }
+
+    #interactiveGif:hover:not(.cooldown) {
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(0, 234, 255, 1);
+    }
+
+    #interactiveGif.cooldown {
+      filter: grayscale(1) brightness(0.5);
+      cursor: not-allowed;
+    }
+
+    /* Cooldown timer */
+    .cooldown-timer {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 14px;
+      font-weight: bold;
+      color: #00eaff;
+      text-shadow: 0 0 5px black;
+      z-index: 10001;
+      display: none;
+    }
+
+    #interactiveGif.cooldown .cooldown-timer {
+      display: block;
+    }
+
+    /* Deltarune-style Text Box */
+    #textBox {
+      position: fixed;
+      bottom: 120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      max-width: 600px;
+      background: rgba(0, 0, 0, 0.9);
+      border: 3px solid #00eaff;
+      border-radius: 10px;
+      padding: 20px;
+      font-family: 'Baloo 2', sans-serif;
+      font-size: 24px;
+      color: white;
+      box-shadow: 0 0 20px rgba(0, 234, 255, 0.7);
+      z-index: 10001;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    #textBox.show {
+      display: block;
+      opacity: 1;
+    }
+
+    #textContent {
+      min-height: 60px;
+      text-align: left;
+    }
+
+    #textBox::after {
+      content: "";
+      position: absolute;
+      bottom: 10px;
+      right: 20px;
+      width: 20px;
+      height: 20px;
+      border-right: 3px solid #00eaff;
+      border-bottom: 3px solid #00eaff;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
   </style>
 </head>
 
@@ -382,6 +469,17 @@
 
   </div>
 
+  <!-- Interactive GIF -->
+  <div id="interactiveGifContainer">
+    <img id="interactiveGif" src="guy.gif" alt="Click me!">
+    <div class="cooldown-timer" id="cooldownTimer">5</div>
+  </div>
+
+  <!-- Deltarune-style Text Box -->
+  <div id="textBox">
+    <div id="textContent"></div>
+  </div>
+
   <!-- Audio Player (Fixed Position) -->
   <div id="audioPlayer">
     <div class="player-controls">
@@ -403,6 +501,11 @@
     Your browser does not support the audio element.
   </audio>
 
+  <!-- Text Sound Effect -->
+  <audio id="textSound" preload="auto">
+    <source src="text.mp3" type="audio/mpeg">
+  </audio>
+
   <!-- Script -->
   <script>
     function switchPage(idToShow) {
@@ -410,6 +513,70 @@
         page.style.display = 'none';
       });
       document.getElementById(idToShow).style.display = 'block';
+    }
+
+    // Interactive GIF functionality with cooldown
+    let isCooldown = false;
+    let cooldownTime = 5; // seconds
+    let cooldownInterval;
+
+    document.getElementById('interactiveGif').addEventListener('click', function() {
+      if (isCooldown) return;
+      
+      showTextMessage("Hi there!");
+      startCooldown();
+    });
+
+    function startCooldown() {
+      isCooldown = true;
+      const gif = document.getElementById('interactiveGif');
+      const timer = document.getElementById('cooldownTimer');
+      
+      gif.classList.add('cooldown');
+      
+      let timeLeft = cooldownTime;
+      timer.textContent = timeLeft;
+      
+      cooldownInterval = setInterval(() => {
+        timeLeft--;
+        timer.textContent = timeLeft;
+        
+        if (timeLeft <= 0) {
+          clearInterval(cooldownInterval);
+          isCooldown = false;
+          gif.classList.remove('cooldown');
+        }
+      }, 1000);
+    }
+
+    // Text box functionality
+    function showTextMessage(message) {
+      const textBox = document.getElementById('textBox');
+      const textContent = document.getElementById('textContent');
+      const textSound = document.getElementById('textSound');
+      
+      // Reset text box
+      textContent.textContent = '';
+      textBox.classList.add('show');
+      
+      // Type out the message with sound effects
+      let i = 0;
+      const typeWriter = () => {
+        if (i < message.length) {
+          textContent.textContent += message.charAt(i);
+          textSound.currentTime = 0;
+          textSound.play();
+          i++;
+          setTimeout(typeWriter, 100); // Adjust speed here
+        } else {
+          // Hide text box after 2.5 seconds
+          setTimeout(() => {
+            textBox.classList.remove('show');
+          }, 2500);
+        }
+      };
+      
+      typeWriter();
     }
 
     // Audio player functionality
