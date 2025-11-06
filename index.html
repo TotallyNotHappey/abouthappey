@@ -506,13 +506,6 @@
     Your browser does not support the audio element.
   </audio>
 
-  <!-- Text Sound Effect with fallback -->
-  <audio id="textSound" preload="auto">
-    <source src="text.mp3" type="audio/mpeg">
-    <source src="text.wav" type="audio/wav">
-    <source src="text.ogg" type="audio/ogg">
-  </audio>
-
   <!-- Script -->
   <script>
     function switchPage(idToShow) {
@@ -529,7 +522,7 @@
     document.getElementById('interactiveGif').addEventListener('click', function() {
       if (isCooldown) return;
       
-      showTextMessage("im lowk spinning rn and like im spinning");
+      showTextMessage("heyo im like spinning weee yeahhh spin");
       startCooldown();
     });
 
@@ -541,59 +534,8 @@
       }, cooldownTime * 1000);
     }
 
-    // Text box functionality with improved sound handling
-    function showTextMessage(message) {
-      const textBox = document.getElementById('textBox');
-      const textContent = document.getElementById('textContent');
-      const textSound = document.getElementById('textSound');
-      
-      // Reset text box
-      textContent.textContent = '';
-      textBox.classList.add('show');
-      
-      // Type out the message with sound effects
-      let i = 0;
-      const typeWriter = () => {
-        if (i < message.length) {
-          textContent.textContent += message.charAt(i);
-          
-          // Try to play the text sound with error handling
-          playTextSound();
-          
-          i++;
-          setTimeout(typeWriter, 100);
-        } else {
-          // Hide text box after 2.5 seconds
-          setTimeout(() => {
-            textBox.classList.remove('show');
-          }, 2500);
-        }
-      };
-      
-      typeWriter();
-    }
-
-    // Improved text sound function with fallback
+    // Text sound function using Web Audio API (no external file needed)
     function playTextSound() {
-      const textSound = document.getElementById('textSound');
-      
-      // Reset the audio to the beginning
-      textSound.currentTime = 0;
-      
-      // Try to play the sound
-      const playPromise = textSound.play();
-      
-      // If play fails, try to generate a fallback sound
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.log("Text sound failed, using fallback:", error);
-          playFallbackSound();
-        });
-      }
-    }
-
-    // Fallback sound using Web Audio API
-    function playFallbackSound() {
       try {
         // Create audio context
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -606,19 +548,64 @@
         oscillator.connect(gainNode);
         gainNode.connect(audioCtx.destination);
         
-        // Configure the beep
-        oscillator.type = 'sine';
-        oscillator.frequency.value = 800; // Hz
+        // Configure the beep - more typewriter-like sound
+        oscillator.type = 'square';
+        oscillator.frequency.value = 1200; // Higher frequency for typewriter sound
         gainNode.gain.value = 0.1; // Volume
         
-        // Play short beep
+        // Play very short beep (typewriter-like)
         oscillator.start();
+        
+        // Quick fade out for more natural sound
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+        
         setTimeout(() => {
           oscillator.stop();
         }, 50);
       } catch (e) {
-        console.log("Fallback sound also failed:", e);
+        console.log("Text sound failed:", e);
+        // If Web Audio API fails, try using a simple HTML audio element with a data URI
+        try {
+          const fallbackAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
+          fallbackAudio.volume = 0.1;
+          fallbackAudio.play().catch(() => {});
+        } catch (e2) {
+          // If all else fails, just do nothing
+        }
       }
+    }
+
+    // Text box functionality
+    function showTextMessage(message) {
+      const textBox = document.getElementById('textBox');
+      const textContent = document.getElementById('textContent');
+      
+      // Reset text box
+      textContent.textContent = '';
+      textBox.classList.add('show');
+      
+      // Type out the message with sound effects
+      let i = 0;
+      const typeWriter = () => {
+        if (i < message.length) {
+          textContent.textContent += message.charAt(i);
+          
+          // Play text sound for each character (except spaces)
+          if (message.charAt(i) !== ' ') {
+            playTextSound();
+          }
+          
+          i++;
+          setTimeout(typeWriter, 100); // Adjust speed here
+        } else {
+          // Hide text box after 2.5 seconds
+          setTimeout(() => {
+            textBox.classList.remove('show');
+          }, 2500);
+        }
+      };
+      
+      typeWriter();
     }
 
     // Audio player functionality
