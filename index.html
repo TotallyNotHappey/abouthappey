@@ -18,20 +18,14 @@
   <style>
     /* Audio Player Styles */
     #audioPlayer {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
       width: 90%;
       max-width: 500px;
       background: rgba(0, 0, 0, 0.8);
       border-radius: 15px;
       padding: 15px;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-      z-index: 1000;
-      backdrop-filter: blur(10px);
+      margin: 30px auto;
       border: 1px solid #00eaff;
-      transition: transform 0.3s ease;
     }
     
     .player-controls {
@@ -122,7 +116,7 @@
     
     /* Additional content to demonstrate scrolling */
     .extra-content {
-      height: 1000px;
+      height: 800px;
       padding: 20px;
       margin-top: 20px;
       text-align: center;
@@ -170,31 +164,31 @@
         </div>
       </div>
 
+      <!-- Audio Player placed in the page flow -->
+      <div id="audioPlayer">
+        <div class="player-controls">
+          <button id="playBtn" class="play-btn">▶</button>
+          <div class="volume-control">
+            <span>🔊</span>
+            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="0.5">
+          </div>
+        </div>
+        
+        <div class="visualizer-container">
+          <canvas id="audioVisualizer"></canvas>
+          <div class="visualizer-center">Audio Visualizer</div>
+        </div>
+      </div>
+
       <!-- Additional content to demonstrate scrolling -->
       <div class="extra-content">
-        <h2>Scroll down to see the audio player follow</h2>
-        <p>This is extra content to demonstrate how the audio player follows the scroll position while staying at the bottom of the viewport.</p>
+        <h2>Scroll down to see the audio player scroll with the page</h2>
+        <p>This is extra content to demonstrate how the audio player is part of the page content and scrolls with it.</p>
         <p>Keep scrolling...</p>
       </div>
 
     </div>
 
-  </div>
-
-  <!-- Audio Player -->
-  <div id="audioPlayer">
-    <div class="player-controls">
-      <button id="playBtn" class="play-btn">▶</button>
-      <div class="volume-control">
-        <span>🔊</span>
-        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.01" value="0.5">
-      </div>
-    </div>
-    
-    <div class="visualizer-container">
-      <canvas id="audioVisualizer"></canvas>
-      <div class="visualizer-center">Audio Visualizer</div>
-    </div>
   </div>
 
   <!-- Audio Element -->
@@ -301,21 +295,6 @@
       // Start visualization when audio plays
       audio.addEventListener('play', () => {
         drawVisualizer();
-      });
-      
-      // Make audio player follow scroll
-      window.addEventListener('scroll', () => {
-        const audioPlayer = document.getElementById('audioPlayer');
-        const scrollY = window.scrollY;
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
-        
-        // Calculate how far we've scrolled as a percentage
-        const scrollPercentage = scrollY / (documentHeight - windowHeight);
-        
-        // Move the player up slightly as we scroll down
-        // This creates a following effect while keeping it at the bottom
-        audioPlayer.style.transform = `translateX(-50%) translateY(${-scrollPercentage * 50}px)`;
       });
       
       // Optional: Auto-play audio if allowed
