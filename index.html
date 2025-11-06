@@ -20,8 +20,10 @@
     #audioPlayer {
       position: fixed;
       bottom: 20px;
-      right: 20px;
-      width: 300px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 500px;
       background: rgba(0, 0, 0, 0.8);
       border-radius: 15px;
       padding: 15px;
@@ -29,6 +31,7 @@
       z-index: 1000;
       backdrop-filter: blur(10px);
       border: 1px solid #00eaff;
+      transition: transform 0.3s ease;
     }
     
     .player-controls {
@@ -116,6 +119,20 @@
       font-size: 12px;
       text-align: center;
     }
+    
+    /* Additional content to demonstrate scrolling */
+    .extra-content {
+      height: 1000px;
+      padding: 20px;
+      margin-top: 20px;
+      text-align: center;
+      color: #fff;
+    }
+    
+    .extra-content h2 {
+      color: #00eaff;
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 
@@ -151,6 +168,13 @@
         <div class="outline">
           <a href="https://www.youtube.com/@TotallyNotHappey" class="anchor" style="color: #fff;">YouTube</a>
         </div>
+      </div>
+
+      <!-- Additional content to demonstrate scrolling -->
+      <div class="extra-content">
+        <h2>Scroll down to see the audio player follow</h2>
+        <p>This is extra content to demonstrate how the audio player follows the scroll position while staying at the bottom of the viewport.</p>
+        <p>Keep scrolling...</p>
       </div>
 
     </div>
@@ -277,6 +301,21 @@
       // Start visualization when audio plays
       audio.addEventListener('play', () => {
         drawVisualizer();
+      });
+      
+      // Make audio player follow scroll
+      window.addEventListener('scroll', () => {
+        const audioPlayer = document.getElementById('audioPlayer');
+        const scrollY = window.scrollY;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        
+        // Calculate how far we've scrolled as a percentage
+        const scrollPercentage = scrollY / (documentHeight - windowHeight);
+        
+        // Move the player up slightly as we scroll down
+        // This creates a following effect while keeping it at the bottom
+        audioPlayer.style.transform = `translateX(-50%) translateY(${-scrollPercentage * 50}px)`;
       });
       
       // Optional: Auto-play audio if allowed
