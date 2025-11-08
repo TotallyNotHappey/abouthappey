@@ -522,7 +522,7 @@
     document.getElementById('interactiveGif').addEventListener('click', function() {
       if (isCooldown) return;
       
-      showTextMessage("heyo im like spinning weee yeahhh spin");
+      showTextMessage("Hi there!");
       startCooldown();
     });
 
@@ -534,48 +534,19 @@
       }, cooldownTime * 1000);
     }
 
-    // Text sound function using Web Audio API (no external file needed)
-    function playTextSound() {
-      try {
-        // Create audio context
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioCtx = new AudioContext();
-        
-        // Create oscillator for beep sound
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        
-        // Configure the beep - more typewriter-like sound
-        oscillator.type = 'square';
-        oscillator.frequency.value = 1200; // Higher frequency for typewriter sound
-        gainNode.gain.value = 0.1; // Volume
-        
-        // Play very short beep (typewriter-like)
-        oscillator.start();
-        
-        // Quick fade out for more natural sound
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-        
-        setTimeout(() => {
-          oscillator.stop();
-        }, 50);
-      } catch (e) {
-        console.log("Text sound failed:", e);
-        // If Web Audio API fails, try using a simple HTML audio element with a data URI
-        try {
-          const fallbackAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=");
-          fallbackAudio.volume = 0.1;
-          fallbackAudio.play().catch(() => {});
-        } catch (e2) {
-          // If all else fails, just do nothing
-        }
-      }
-    }
+    // Text box functionality with proper text.mp3 handling
+    let textSound = null;
+    
+    // Preload the text sound when the page loads
+    window.addEventListener('DOMContentLoaded', function() {
+      textSound = new Audio('text.mp3');
+      textSound.preload = 'auto';
+      textSound.volume = 0.3; // Set volume to 30%
+      
+      // Try to load the sound immediately
+      textSound.load();
+    });
 
-    // Text box functionality
     function showTextMessage(message) {
       const textBox = document.getElementById('textBox');
       const textContent = document.getElementById('textContent');
@@ -590,13 +561,11 @@
         if (i < message.length) {
           textContent.textContent += message.charAt(i);
           
-          // Play text sound for each character (except spaces)
-          if (message.charAt(i) !== ' ') {
-            playTextSound();
-          }
+          // Play text sound for each character
+          playTextSound();
           
           i++;
-          setTimeout(typeWriter, 100); // Adjust speed here
+          setTimeout(typeWriter, 100);
         } else {
           // Hide text box after 2.5 seconds
           setTimeout(() => {
@@ -606,6 +575,54 @@
       };
       
       typeWriter();
+    }
+
+    function playTextSound() {
+      if (textSound) {
+        // Create a new instance of the audio each time to allow overlapping sounds
+        const soundClone = new Audio('text.mp3');
+        soundClone.volume = 0.3;
+        
+        // Try to play the sound
+        soundClone.play().catch(error => {
+          console.log("Could not play text sound:", error);
+          // Fallback to beep sound if text.mp3 fails
+          playFallbackSound();
+        });
+      } else {
+        // Fallback if textSound isn't loaded yet
+        playFallbackSound();
+      }
+    }
+
+    // Fallback sound using Web Audio API
+    function playFallbackSound() {
+      try {
+        // Create audio context
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        
+        // Create oscillator for beep sound
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        // Configure the beep
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 800 + Math.random() * 200; // Slight variation
+        gainNode.gain.value = 0.1;
+        
+        // Play short beep
+        oscillator.start();
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        setTimeout(() => {
+          oscillator.stop();
+        }, 100);
+      } catch (e) {
+        console.log("Fallback sound also failed:", e);
+      }
     }
 
     // Audio player functionality
