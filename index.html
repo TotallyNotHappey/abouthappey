@@ -530,13 +530,13 @@
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       audioContext = new AudioContext();
       
-      // Load the text.mp3 sound
+      // Load the text.wav sound
       loadTextSound();
     }
 
-    // Load the text.mp3 file
+    // Load the text.wav file
     function loadTextSound() {
-      fetch('text.mp3')
+      fetch('text.wav')
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok');
@@ -546,10 +546,10 @@
         .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
         .then(audioBuffer => {
           textSoundBuffer = audioBuffer;
-          console.log('text.mp3 loaded successfully');
+          console.log('text.wav loaded successfully');
         })
         .catch(error => {
-          console.error('Error loading text.mp3:', error);
+          console.error('Error loading text.wav:', error);
           textSoundBuffer = null;
         });
     }
@@ -610,7 +610,7 @@
         initializeAudio();
       }
       
-      showTextMessage("Hi there!");
+      showTextMessage("im spinning yeahh im spinning woo");
       startCooldown();
     });
 
