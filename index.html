@@ -515,12 +515,100 @@
       document.getElementById(idToShow).style.display = 'block';
     }
 
+    // Sound management
+    let audioContext = null;
+    let textSoundBuffer = null;
+    let audioInitialized = false;
+
+    // Initialize audio on first user interaction
+    function initializeAudio() {
+      if (audioInitialized) return;
+      
+      audioInitialized = true;
+      
+      // Create audio context
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioContext = new AudioContext();
+      
+      // Load the text.mp3 sound
+      loadTextSound();
+    }
+
+    // Load the text.mp3 file
+    function loadTextSound() {
+      fetch('text.mp3')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.arrayBuffer();
+        })
+        .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => {
+          textSoundBuffer = audioBuffer;
+          console.log('text.mp3 loaded successfully');
+        })
+        .catch(error => {
+          console.error('Error loading text.mp3:', error);
+          textSoundBuffer = null;
+        });
+    }
+
+    // Play the text sound using Web Audio API
+    function playTextSound() {
+      if (!audioContext || !textSoundBuffer) {
+        playFallbackSound();
+        return;
+      }
+      
+      try {
+        const source = audioContext.createBufferSource();
+        source.buffer = textSoundBuffer;
+        source.connect(audioContext.destination);
+        source.start(0);
+      } catch (error) {
+        console.error('Error playing text sound:', error);
+        playFallbackSound();
+      }
+    }
+
+    // Fallback sound using Web Audio API
+    function playFallbackSound() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+        
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 800 + Math.random() * 200;
+        gainNode.gain.value = 0.1;
+        
+        oscillator.start();
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        setTimeout(() => {
+          oscillator.stop();
+        }, 100);
+      } catch (e) {
+        console.log("Fallback sound failed:", e);
+      }
+    }
+
     // Interactive GIF functionality with cooldown
     let isCooldown = false;
     let cooldownTime = 5; // seconds
 
     document.getElementById('interactiveGif').addEventListener('click', function() {
       if (isCooldown) return;
+      
+      // Initialize audio on first click
+      if (!audioInitialized) {
+        initializeAudio();
+      }
       
       showTextMessage("Hi there!");
       startCooldown();
@@ -534,19 +622,7 @@
       }, cooldownTime * 1000);
     }
 
-    // Text box functionality with proper text.mp3 handling
-    let textSound = null;
-    
-    // Preload the text sound when the page loads
-    window.addEventListener('DOMContentLoaded', function() {
-      textSound = new Audio('text.mp3');
-      textSound.preload = 'auto';
-      textSound.volume = 0.3; // Set volume to 30%
-      
-      // Try to load the sound immediately
-      textSound.load();
-    });
-
+    // Text box functionality
     function showTextMessage(message) {
       const textBox = document.getElementById('textBox');
       const textContent = document.getElementById('textContent');
@@ -577,54 +653,6 @@
       typeWriter();
     }
 
-    function playTextSound() {
-      if (textSound) {
-        // Create a new instance of the audio each time to allow overlapping sounds
-        const soundClone = new Audio('text.mp3');
-        soundClone.volume = 0.3;
-        
-        // Try to play the sound
-        soundClone.play().catch(error => {
-          console.log("Could not play text sound:", error);
-          // Fallback to beep sound if text.mp3 fails
-          playFallbackSound();
-        });
-      } else {
-        // Fallback if textSound isn't loaded yet
-        playFallbackSound();
-      }
-    }
-
-    // Fallback sound using Web Audio API
-    function playFallbackSound() {
-      try {
-        // Create audio context
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioCtx = new AudioContext();
-        
-        // Create oscillator for beep sound
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        
-        // Configure the beep
-        oscillator.type = 'sine';
-        oscillator.frequency.value = 800 + Math.random() * 200; // Slight variation
-        gainNode.gain.value = 0.1;
-        
-        // Play short beep
-        oscillator.start();
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-        setTimeout(() => {
-          oscillator.stop();
-        }, 100);
-      } catch (e) {
-        console.log("Fallback sound also failed:", e);
-      }
-    }
-
     // Audio player functionality
     window.addEventListener('DOMContentLoaded', () => {
       const audio = document.getElementById('bgAudio');
@@ -645,16 +673,16 @@
       }
       
       // Audio context for visualization
-      let audioContext, analyser, source, dataArray;
+      let vizAudioContext, analyser, source, dataArray;
       
       // Initialize audio context
       function initAudioContext() {
-        if (!audioContext) {
-          audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          analyser = audioContext.createAnalyser();
-          source = audioContext.createMediaElementSource(audio);
+        if (!vizAudioContext) {
+          vizAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = vizAudioContext.createAnalyser();
+          source = vizAudioContext.createMediaElementSource(audio);
           source.connect(analyser);
-          analyser.connect(audioContext.destination);
+          analyser.connect(vizAudioContext.destination);
           
           analyser.fftSize = 256;
           const bufferLength = analyser.frequencyBinCount;
