@@ -485,12 +485,12 @@
 
       <!-- MESSAGE SYSTEM -->
       <div class="hCon" id="border" style="margin-top: 40px;">
-        <h3 style="color: #00eaff; margin-bottom: 20px;">Ask me anything!</h3>
+        <h3 style="color: #00eaff; margin-bottom: 20px;">Ask me anything or Message me</h3>
         
         <div class="outline">
           <textarea 
             id="questionInput" 
-            placeholder="Type your question or message here..."
+            placeholder="Type your message here"
             class="message-textarea"
           ></textarea>
         </div>
@@ -589,7 +589,7 @@
         await saveMessagesToJSONBin(updatedMessages);
         
         // Success - change button to "Sent!" and clear input
-        sendBtn.textContent = 'Sent!';
+        sendBtn.textContent = 'Sent';
         document.getElementById('questionInput').value = '';
         
         // Reset button after 2 seconds
@@ -602,7 +602,7 @@
         console.error('Error saving message to JSONBin:', error);
         // Show error state
         const sendBtn = document.getElementById('sendButton');
-        sendBtn.textContent = 'Error!';
+        sendBtn.textContent = 'Error';
         
         // Reset after 2 seconds
         setTimeout(() => {
