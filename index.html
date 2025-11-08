@@ -550,16 +550,12 @@
         })
         .catch(error => {
           console.error('Error loading text.wav:', error);
-          textSoundBuffer = null;
         });
     }
 
     // Play the text sound using Web Audio API
     function playTextSound() {
-      if (!audioContext || !textSoundBuffer) {
-        playFallbackSound();
-        return;
-      }
+      if (!audioContext || !textSoundBuffer) return;
       
       try {
         const source = audioContext.createBufferSource();
@@ -568,33 +564,6 @@
         source.start(0);
       } catch (error) {
         console.error('Error playing text sound:', error);
-        playFallbackSound();
-      }
-    }
-
-    // Fallback sound using Web Audio API
-    function playFallbackSound() {
-      try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioCtx = new AudioContext();
-        
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        
-        oscillator.type = 'sine';
-        oscillator.frequency.value = 800 + Math.random() * 200;
-        gainNode.gain.value = 0.1;
-        
-        oscillator.start();
-        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-        setTimeout(() => {
-          oscillator.stop();
-        }, 100);
-      } catch (e) {
-        console.log("Fallback sound failed:", e);
       }
     }
 
@@ -622,7 +591,7 @@
       }, cooldownTime * 1000);
     }
 
-    // Text box functionality
+    // Text box functionality with faster typing
     function showTextMessage(message) {
       const textBox = document.getElementById('textBox');
       const textContent = document.getElementById('textContent');
@@ -631,7 +600,7 @@
       textContent.textContent = '';
       textBox.classList.add('show');
       
-      // Type out the message with sound effects
+      // Type out the message with sound effects - faster speed (50ms instead of 100ms)
       let i = 0;
       const typeWriter = () => {
         if (i < message.length) {
@@ -641,7 +610,7 @@
           playTextSound();
           
           i++;
-          setTimeout(typeWriter, 100);
+          setTimeout(typeWriter, 50); // Faster typing speed
         } else {
           // Hide text box after 2.5 seconds
           setTimeout(() => {
