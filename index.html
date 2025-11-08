@@ -431,6 +431,26 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0; }
     }
+
+    /* Message System Styles */
+    .message-textarea {
+      width: 100%;
+      height: 100px;
+      padding: 15px;
+      border: 2px solid #00eaff;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      font-family: 'Baloo 2', sans-serif;
+      font-size: 16px;
+      resize: vertical;
+      margin: 10px 0;
+    }
+
+    .message-textarea:focus {
+      outline: none;
+      box-shadow: 0 0 10px rgba(0, 234, 255, 0.5);
+    }
   </style>
 </head>
 
@@ -458,6 +478,25 @@
         
         <div class="outline" style="margin-top: 20px;">
           <a href="https://www.roblox.com/users/401257777/profile" class="anchor" style="color: #fff;">Roblox Profile</a>
+        </div>
+      </div>
+
+      <!-- MESSAGE SYSTEM -->
+      <div class="hCon" id="border" style="margin-top: 40px;">
+        <h3 style="color: #00eaff; margin-bottom: 20px;">Ask me anything</h3>
+        
+        <div class="outline">
+          <textarea 
+            id="questionInput" 
+            placeholder="Type your message here"
+            class="message-textarea"
+          ></textarea>
+        </div>
+        
+        <div class="outline" style="margin-top: 15px;">
+          <button id="sendButton" class="anchor" style="color: #fff; width: 100%;">
+            Send message
+          </button>
         </div>
       </div>
 
@@ -507,6 +546,75 @@
       });
       document.getElementById(idToShow).style.display = 'block';
     }
+
+    // ==================== MESSAGE SYSTEM ====================
+    
+    // Save message to localStorage (this will sync with your GitHub viewer)
+    function saveMessage(message) {
+      // Simply return if message is empty
+      if (!message.trim()) return;
+
+      // Create message data
+      const messageData = {
+        text: message,
+        timestamp: new Date().toISOString(),
+        id: Date.now() + Math.random()
+      };
+
+      try {
+        // Show loading
+        const sendBtn = document.getElementById('sendButton');
+        const originalText = sendBtn.textContent;
+        sendBtn.textContent = 'Sending...';
+        sendBtn.disabled = true;
+
+        // Save to localStorage (this is what your GitHub viewer will read)
+        const messages = JSON.parse(localStorage.getItem('github_messages') || '[]');
+        messages.push(messageData);
+        localStorage.setItem('github_messages', JSON.stringify(messages));
+        
+        // Success - change button to "Sent!" and clear input
+        setTimeout(() => {
+          sendBtn.textContent = 'Sent!';
+          document.getElementById('questionInput').value = '';
+          
+          // Reset button after 2 seconds
+          setTimeout(() => {
+            sendBtn.textContent = originalText;
+            sendBtn.disabled = false;
+          }, 2000);
+          
+        }, 500);
+        
+      } catch (error) {
+        console.error('Error saving message:', error);
+        // Show error state
+        const sendBtn = document.getElementById('sendButton');
+        sendBtn.textContent = 'Error!';
+        
+        // Reset after 2 seconds
+        setTimeout(() => {
+          sendBtn.textContent = 'Send Message';
+          sendBtn.disabled = false;
+        }, 2000);
+      }
+    }
+
+    // Event listeners for message system
+    document.getElementById('sendButton').addEventListener('click', function() {
+      const message = document.getElementById('questionInput').value;
+      saveMessage(message);
+    });
+
+    // Enter key support for message input
+    document.getElementById('questionInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        saveMessage(this.value);
+      }
+    });
+
+    // ==================== EXISTING FUNCTIONALITY ====================
 
     // Sound management
     let audioContext = null;
