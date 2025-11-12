@@ -247,7 +247,7 @@
       background: linear-gradient(135deg, #321e7f, #151b33);
       background-size: 800% 800%;
       animation: gradientShift 20s ease infinite;
-      transition: background-color 0.1s ease;
+      transition: background-color 0.3s ease; /* Smooth transition for fade back */
     }
 
     @keyframes gradientShift {
@@ -256,15 +256,10 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* BPM Pulse Effect */
-    @keyframes bpmPulse {
-      0% { background-color: #000000; }
-      50% { background-color: #000000; }
-      100% { background-color: transparent; }
-    }
-
+    /* BPM Pulse Effect - Instant black, smooth fade back */
     .bpm-pulse {
-      animation: bpmPulse 0.3s ease;
+      background-color: #000000 !important; /* Instant black */
+      transition: background-color 0.3s ease; /* Smooth fade back to original */
     }
 
     /* Audio Player Styles - FIXED POSITION */
@@ -584,6 +579,34 @@
     .loading-dot:nth-child(1) { animation-delay: -0.32s; }
     .loading-dot:nth-child(2) { animation-delay: -0.16s; }
 
+    /* Skip Button Styles */
+    .skip-button {
+      position: absolute;
+      bottom: min(5vh, 50px);
+      right: min(5vw, 50px);
+      background: rgba(0, 234, 255, 0.2);
+      color: white;
+      border: 2px solid #00eaff;
+      border-radius: 25px;
+      padding: 12px 24px;
+      font-family: 'Baloo 2', sans-serif;
+      font-size: min(3vw, 16px);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 1;
+      backdrop-filter: blur(5px);
+    }
+
+    .skip-button:hover {
+      background: rgba(0, 234, 255, 0.4);
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(0, 234, 255, 0.5);
+    }
+
+    .skip-button:active {
+      transform: scale(0.95);
+    }
+
     @keyframes dotBounce {
       0%, 80%, 100% {
         transform: scale(0);
@@ -612,6 +635,12 @@
         width: 300px;
         right: 10px;
         bottom: 10px;
+      }
+
+      .skip-button {
+        bottom: 30px;
+        right: 30px;
+        padding: 10px 20px;
       }
     }
 
@@ -645,6 +674,13 @@
       .lyrics-line.active {
         font-size: 14px;
       }
+
+      .skip-button {
+        bottom: 20px;
+        right: 20px;
+        padding: 8px 16px;
+        font-size: min(4vw, 14px);
+      }
     }
 
     /* Very small screens */
@@ -665,6 +701,11 @@
       
       .loading-dots {
         margin-top: min(2vh, 15px);
+      }
+
+      .skip-button {
+        bottom: 15px;
+        right: 15px;
       }
     }
 
@@ -697,6 +738,8 @@
       <div class="loading-dot"></div>
       <div class="loading-dot"></div>
     </div>
+    <!-- Skip Button -->
+    <button class="skip-button" id="skipButton">Skip Loading</button>
   </div>
 
   <!-- Main Content -->
@@ -796,34 +839,74 @@
     let loadingScreen = document.getElementById('loadingScreen');
     let progressBar = document.getElementById('progressBar');
     let loadingStatus = document.getElementById('loadingStatus');
+    let skipButton = document.getElementById('skipButton');
     let resourcesToLoad = [];
+    let loadingComplete = false;
     
     // Function to update loading progress
     function updateProgress(resourceName) {
       loadedResources++;
       const progress = Math.min(100, Math.round((loadedResources / totalResources) * 100));
       progressBar.style.width = `${progress}%`;
-      loadingStatus.textContent = `Loading ${resourceName}... (${progress}%)`;
+      
+      // Simplified loading text - just show "Loading..." with percentage
+      loadingStatus.textContent = `Loading... (${progress}%)`;
       
       console.log(`Loaded: ${resourceName} (${loadedResources}/${totalResources})`);
       
       // If everything is loaded, show "Finalized!" message
       if (loadedResources >= totalResources) {
-        loadingStatus.textContent = "Finalized!";
-        console.log("All resources loaded successfully!");
+        completeLoading();
+      }
+    }
+    
+    // Function to complete the loading process
+    function completeLoading() {
+      if (loadingComplete) return;
+      
+      loadingComplete = true;
+      loadingStatus.textContent = "Finalized!";
+      console.log("All resources loaded successfully!");
+      
+      setTimeout(() => {
+        loadingScreen.style.opacity = '0';
+        loadingScreen.style.visibility = 'hidden';
+        
+        // After fade out, remove from DOM
+        setTimeout(() => {
+          loadingScreen.remove();
+          // Initialize audio system after loading is complete
+          initializeAudioSystem();
+        }, 800);
+      }, 1000);
+    }
+    
+    // Function to skip loading
+    function skipLoading() {
+      if (loadingComplete) return;
+      
+      console.log("Loading skipped by user");
+      loadingComplete = true;
+      
+      // Force complete all remaining resources
+      const remaining = totalResources - loadedResources;
+      for (let i = 0; i < remaining; i++) {
+        loadedResources++;
+      }
+      
+      progressBar.style.width = '100%';
+      loadingStatus.textContent = "Skipped!";
+      
+      setTimeout(() => {
+        loadingScreen.style.opacity = '0';
+        loadingScreen.style.visibility = 'hidden';
         
         setTimeout(() => {
-          loadingScreen.style.opacity = '0';
-          loadingScreen.style.visibility = 'hidden';
-          
-          // After fade out, remove from DOM
-          setTimeout(() => {
-            loadingScreen.remove();
-            // Initialize audio system after loading is complete
-            initializeAudioSystem();
-          }, 800);
-        }, 1000);
-      }
+          loadingScreen.remove();
+          // Initialize audio system after loading is skipped
+          initializeAudioSystem();
+        }, 800);
+      }, 500);
     }
     
     // Function to preload and track resources
@@ -869,6 +952,9 @@
       totalResources = resources.length + 1; // +1 for DOM content
       resourcesToLoad = resources;
       
+      // Add event listener for skip button
+      skipButton.addEventListener('click', skipLoading);
+      
       // Preload all resources
       const loadPromises = resources.map(resource => 
         preloadResource(resource.src, resource.type, resource.name)
@@ -889,12 +975,9 @@
       
       // Fallback: if everything isn't loaded in 10 seconds, force completion
       setTimeout(() => {
-        if (loadedResources < totalResources) {
+        if (!loadingComplete && loadedResources < totalResources) {
           console.log("Loading timeout reached, forcing completion");
-          const remaining = totalResources - loadedResources;
-          for (let i = 0; i < remaining; i++) {
-            updateProgress('Timeout Fallback');
-          }
+          completeLoading();
         }
       }, 10000);
     }
@@ -992,6 +1075,7 @@
     let lyrics = [];
     let currentLyricIndex = 0;
     let bpmInterval;
+    let isPulsing = false;
 
     // Parse LRC format
     function parseLRC(lrcText) {
@@ -1066,7 +1150,7 @@
       }
     }
 
-    // ==================== BPM BACKGROUND SYNC ====================
+    // ==================== IMPROVED BPM BACKGROUND SYNC ====================
     
     function startBPMBackgroundSync(bpm = 120) {
       // Calculate interval based on BPM (beats per minute to milliseconds)
@@ -1079,14 +1163,30 @@
       
       // Create new interval for BPM sync
       bpmInterval = setInterval(() => {
-        const body = document.getElementById('body');
-        body.classList.add('bpm-pulse');
-        
-        // Remove the class after animation completes
-        setTimeout(() => {
-          body.classList.remove('bpm-pulse');
-        }, 300);
+        if (!isPulsing) {
+          pulseBackground();
+        }
       }, interval);
+    }
+
+    function pulseBackground() {
+      if (isPulsing) return;
+      
+      isPulsing = true;
+      const body = document.getElementById('body');
+      
+      // Instantly apply black background
+      body.classList.add('bpm-pulse');
+      
+      // Remove the class after a short delay to trigger the fade back
+      setTimeout(() => {
+        body.classList.remove('bpm-pulse');
+        
+        // Reset pulsing flag after transition completes
+        setTimeout(() => {
+          isPulsing = false;
+        }, 300); // Match the CSS transition duration
+      }, 50); // Very short duration for the black state
     }
 
     function stopBPMBackgroundSync() {
@@ -1094,6 +1194,10 @@
         clearInterval(bpmInterval);
         bpmInterval = null;
       }
+      // Reset background to normal
+      const body = document.getElementById('body');
+      body.classList.remove('bpm-pulse');
+      isPulsing = false;
     }
 
     // ==================== EXISTING FUNCTIONALITY ====================
