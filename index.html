@@ -782,30 +782,35 @@
   </div>
 
   <!-- Audio Element -->
-  <audio id="bgAudio" loop>
+  <audio id="bgAudio" loop preload="auto">
     <source src="FINDYOURFLAME.mp3" type="audio/mpeg">
     Your browser does not support the audio element.
   </audio>
 
   <!-- Script -->
   <script>
-    // ==================== LOADING SCREEN FUNCTIONALITY ====================
+    // ==================== ENHANCED LOADING SCREEN FUNCTIONALITY ====================
     
     let loadedResources = 0;
     let totalResources = 0;
     let loadingScreen = document.getElementById('loadingScreen');
     let progressBar = document.getElementById('progressBar');
     let loadingStatus = document.getElementById('loadingStatus');
+    let resourcesToLoad = [];
     
     // Function to update loading progress
     function updateProgress(resourceName) {
       loadedResources++;
       const progress = Math.min(100, Math.round((loadedResources / totalResources) * 100));
       progressBar.style.width = `${progress}%`;
+      loadingStatus.textContent = `Loading ${resourceName}... (${progress}%)`;
+      
+      console.log(`Loaded: ${resourceName} (${loadedResources}/${totalResources})`);
       
       // If everything is loaded, show "Finalized!" message
       if (loadedResources >= totalResources) {
         loadingStatus.textContent = "Finalized!";
+        console.log("All resources loaded successfully!");
         
         setTimeout(() => {
           loadingScreen.style.opacity = '0';
@@ -814,56 +819,94 @@
           // After fade out, remove from DOM
           setTimeout(() => {
             loadingScreen.remove();
+            // Initialize audio system after loading is complete
+            initializeAudioSystem();
           }, 800);
-        }, 500);
+        }, 1000);
       }
     }
     
-    // Function to count resources and initialize loading
-    function initializeLoadingScreen() {
-      // Count total resources to load
-      const images = document.querySelectorAll('img');
-      const audioElements = document.querySelectorAll('audio');
-      const fonts = document.querySelectorAll('link[rel*="font"], link[rel*="icon"]');
-      
-      totalResources = images.length + audioElements.length + fonts.length + 2; // +2 for the page itself and the font file
-      
-      // Track image loading
-      images.forEach(img => {
-        if (img.complete) {
-          updateProgress(img.alt || 'image');
-        } else {
-          img.addEventListener('load', () => updateProgress(img.alt || 'image'));
-          img.addEventListener('error', () => updateProgress(img.alt || 'image'));
+    // Function to preload and track resources
+    function preloadResource(src, type, name) {
+      return new Promise((resolve, reject) => {
+        const resource = type === 'image' ? new Image() : document.createElement(type);
+        
+        resource.onload = () => {
+          console.log(`Successfully loaded: ${name}`);
+          resolve({src, type, name});
+        };
+        
+        resource.onerror = () => {
+          console.warn(`Failed to load: ${name}`);
+          resolve({src, type, name, error: true}); // Resolve even on error to continue loading
+        };
+        
+        if (type === 'image') {
+          resource.src = src;
+        } else if (type === 'audio') {
+          resource.src = src;
+          resource.preload = 'auto';
         }
       });
-      
-      // Track audio loading
-      audioElements.forEach(audio => {
-        audio.addEventListener('canplaythrough', () => updateProgress('audio'));
-        audio.addEventListener('error', () => updateProgress('audio'));
-      });
-      
-      // Track font loading
-      document.fonts.ready.then(() => {
-        updateProgress('fonts');
-      });
-      
-      // Mark page structure as loaded
-      document.addEventListener('DOMContentLoaded', () => {
-        updateProgress('page structure');
-      });
-      
-      // Fallback: if everything isn't loaded in 5 seconds, force completion
-      setTimeout(() => {
-        if (loadedResources < totalResources) {
-          loadedResources = totalResources;
-          updateProgress('finalizing');
-        }
-      }, 5000);
     }
     
-    // Initialize loading screen when script runs
+    // Function to count and preload all resources
+    async function initializeLoadingScreen() {
+      console.log("Starting resource loading...");
+      
+      // List all resources to preload
+      const resources = [
+        { src: 'guy.gif', type: 'image', name: 'Loading GIF' },
+        { src: 'profile.png', type: 'image', name: 'Profile Image' },
+        { src: 'guy.gif', type: 'image', name: 'Interactive GIF' },
+        { src: 'guy.gif', type: 'image', name: 'Character GIF' },
+        { src: 'FINDYOURFLAME.mp3', type: 'audio', name: 'Background Music' },
+        { src: 'text.wav', type: 'audio', name: 'Text Sound' },
+        { src: 'Righteous-Regular.woff', type: 'font', name: 'Custom Font' },
+        { src: 'fav-icon.png', type: 'image', name: 'Favicon' }
+      ];
+      
+      totalResources = resources.length + 1; // +1 for DOM content
+      resourcesToLoad = resources;
+      
+      // Preload all resources
+      const loadPromises = resources.map(resource => 
+        preloadResource(resource.src, resource.type, resource.name)
+          .then(result => updateProgress(result.name))
+          .catch(error => {
+            console.error(`Error loading ${resource.name}:`, error);
+            updateProgress(resource.name);
+          })
+      );
+      
+      // Track DOM content loaded
+      document.addEventListener('DOMContentLoaded', () => {
+        updateProgress('Page Structure');
+      });
+      
+      // Wait for all resources to load (or fail)
+      await Promise.allSettled(loadPromises);
+      
+      // Fallback: if everything isn't loaded in 10 seconds, force completion
+      setTimeout(() => {
+        if (loadedResources < totalResources) {
+          console.log("Loading timeout reached, forcing completion");
+          const remaining = totalResources - loadedResources;
+          for (let i = 0; i < remaining; i++) {
+            updateProgress('Timeout Fallback');
+          }
+        }
+      }, 10000);
+    }
+    
+    // Initialize audio system after loading
+    function initializeAudioSystem() {
+      console.log("Initializing audio system...");
+      // Your existing audio initialization code will run here
+      // This ensures audio is ready after everything is loaded
+    }
+    
+    // Start loading process when script runs
     initializeLoadingScreen();
 
     // ==================== LYRICS SYSTEM ====================
@@ -1292,12 +1335,14 @@
       typeWriter();
     }
 
-    // Audio player functionality
-    window.addEventListener('DOMContentLoaded', () => {
+    // Audio player functionality - This will run after loading is complete
+    function initializeAudioSystem() {
       const audio = document.getElementById('bgAudio');
       const playBtn = document.getElementById('playBtn');
       const volumeSlider = document.getElementById('volumeSlider');
       const visualizerContainer = document.getElementById('visualizerContainer');
+      
+      console.log("Audio system initializing...");
       
       // Parse and display lyrics
       lyrics = parseLRC(lrcData);
@@ -1336,12 +1381,15 @@
       // Play/Pause functionality
       playBtn.addEventListener('click', () => {
         if (audio.paused) {
-          audio.play();
-          playBtn.textContent = '❚❚';
-          initAudioContext();
-          
-          // Start BPM background sync (adjust BPM value as needed for your song)
-          startBPMBackgroundSync(90);
+          audio.play().then(() => {
+            playBtn.textContent = '❚❚';
+            initAudioContext();
+            
+            // Start BPM background sync (adjust BPM value as needed for your song)
+            startBPMBackgroundSync(90);
+          }).catch(error => {
+            console.error("Error playing audio:", error);
+          });
         } else {
           audio.pause();
           playBtn.textContent = '▶';
@@ -1392,6 +1440,14 @@
         stopBPMBackgroundSync();
         playBtn.textContent = '▶';
       });
+      
+      console.log("Audio system initialized successfully!");
+    }
+
+    // Initialize the page after DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log("DOM fully loaded and parsed");
+      // The loading system will handle resource loading and then initialize the audio system
     });
   </script>
 
