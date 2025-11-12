@@ -241,16 +241,16 @@
       }
     }
 
-    /*BG ANIM - Enhanced for BPM sync */
+    /*BG ANIM - Now with BPM sync control */
     body {
       background: linear-gradient(135deg, #321e7f, #151b33);
       background-size: 800% 800%;
       animation: gradientShift 20s ease infinite;
-      transition: background-color 0.6s ease; /* Smooth transition for fade back */
+      transition: background-color 0.5s linear; /* Smooth fade between beats */
     }
 
-    /* Pause gradient animation during BPM pulse */
-    body.gradient-paused {
+    /* Pause background animation during BPM sync */
+    body.bpm-active {
       animation-play-state: paused;
     }
 
@@ -260,10 +260,10 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* BPM Pulse Effect - Instant black, smooth fade back */
+    /* BPM Pulse Effect - Instant black, smooth fade to original */
     .bpm-pulse {
       background-color: #000000 !important; /* Instant black */
-      animation: none !important; /* Stop gradient animation */
+      /* The fade back is handled by the transition on body */
     }
 
     /* Audio Player Styles - FIXED POSITION */
@@ -1080,7 +1080,7 @@
     let currentLyricIndex = 0;
     let bpmInterval;
     let isPulsing = false;
-    let currentBPM = 90;
+    let originalGradientPosition = '0% 50%';
 
     // Parse LRC format
     function parseLRC(lrcText) {
@@ -1157,9 +1157,7 @@
 
     // ==================== ENHANCED BPM BACKGROUND SYNC ====================
     
-    function startBPMBackgroundSync(bpm = 90) {
-      currentBPM = bpm;
-      
+    function startBPMBackgroundSync(bpm = 120) {
       // Calculate interval based on BPM (beats per minute to milliseconds)
       const interval = (60 / bpm) * 1000;
       
@@ -1168,39 +1166,42 @@
         clearInterval(bpmInterval);
       }
       
+      // Store original gradient position
+      const body = document.getElementById('body');
+      originalGradientPosition = getComputedStyle(body).backgroundPosition;
+      
+      // Pause the background animation
+      body.classList.add('bpm-active');
+      
       // Create new interval for BPM sync
       bpmInterval = setInterval(() => {
         if (!isPulsing) {
-          pulseBackground();
+          pulseBackground(interval);
         }
       }, interval);
     }
 
-    function pulseBackground() {
+    function pulseBackground(interval) {
       if (isPulsing) return;
       
       isPulsing = true;
       const body = document.getElementById('body');
       
-      // Pause the gradient animation
-      body.classList.add('gradient-paused');
+      // Set transition duration to match the beat interval
+      body.style.transition = `background-color ${interval}ms linear`;
       
       // Instantly apply black background
       body.classList.add('bpm-pulse');
       
-      // Calculate fade duration (entire interval until next beat)
-      const fadeDuration = (60 / currentBPM) * 1000;
-      
-      // Remove the black background after the fade duration to trigger the fade back
+      // Remove the class after the interval to trigger the fade back
       setTimeout(() => {
         body.classList.remove('bpm-pulse');
         
-        // Re-enable gradient animation after fade completes
+        // Reset pulsing flag after transition completes
         setTimeout(() => {
-          body.classList.remove('gradient-paused');
           isPulsing = false;
-        }, 50); // Small delay to ensure smooth transition
-      }, fadeDuration - 50); // Subtract small buffer for smooth transition
+        }, interval);
+      }, 10); // Very short duration for the black state
     }
 
     function stopBPMBackgroundSync() {
@@ -1208,10 +1209,12 @@
         clearInterval(bpmInterval);
         bpmInterval = null;
       }
-      // Reset background to normal
+      
+      // Reset background to normal and resume animation
       const body = document.getElementById('body');
       body.classList.remove('bpm-pulse');
-      body.classList.remove('gradient-paused');
+      body.classList.remove('bpm-active');
+      body.style.transition = ''; // Reset transition
       isPulsing = false;
     }
 
