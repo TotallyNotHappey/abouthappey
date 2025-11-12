@@ -124,7 +124,6 @@
     body {
       font-family: 'Baloo 2', 'Ubuntu', verdana, sans-serif;
       line-height: 1.5;
-      background-image: linear-gradient(135deg, #00eaff, #00eaff);
     }
 
     html, body {
@@ -242,12 +241,17 @@
       }
     }
 
-    /*BG ANIM - Now with BPM sync */
+    /*BG ANIM - Enhanced for BPM sync */
     body {
       background: linear-gradient(135deg, #321e7f, #151b33);
       background-size: 800% 800%;
       animation: gradientShift 20s ease infinite;
-      transition: background-color 0.3s ease; /* Smooth transition for fade back */
+      transition: background-color 0.6s ease; /* Smooth transition for fade back */
+    }
+
+    /* Pause gradient animation during BPM pulse */
+    body.gradient-paused {
+      animation-play-state: paused;
     }
 
     @keyframes gradientShift {
@@ -259,7 +263,7 @@
     /* BPM Pulse Effect - Instant black, smooth fade back */
     .bpm-pulse {
       background-color: #000000 !important; /* Instant black */
-      transition: background-color 0.3s ease; /* Smooth fade back to original */
+      animation: none !important; /* Stop gradient animation */
     }
 
     /* Audio Player Styles - FIXED POSITION */
@@ -1076,6 +1080,7 @@
     let currentLyricIndex = 0;
     let bpmInterval;
     let isPulsing = false;
+    let currentBPM = 90;
 
     // Parse LRC format
     function parseLRC(lrcText) {
@@ -1150,9 +1155,11 @@
       }
     }
 
-    // ==================== IMPROVED BPM BACKGROUND SYNC ====================
+    // ==================== ENHANCED BPM BACKGROUND SYNC ====================
     
-    function startBPMBackgroundSync(bpm = 120) {
+    function startBPMBackgroundSync(bpm = 90) {
+      currentBPM = bpm;
+      
       // Calculate interval based on BPM (beats per minute to milliseconds)
       const interval = (60 / bpm) * 1000;
       
@@ -1175,18 +1182,25 @@
       isPulsing = true;
       const body = document.getElementById('body');
       
+      // Pause the gradient animation
+      body.classList.add('gradient-paused');
+      
       // Instantly apply black background
       body.classList.add('bpm-pulse');
       
-      // Remove the class after a short delay to trigger the fade back
+      // Calculate fade duration (entire interval until next beat)
+      const fadeDuration = (60 / currentBPM) * 1000;
+      
+      // Remove the black background after the fade duration to trigger the fade back
       setTimeout(() => {
         body.classList.remove('bpm-pulse');
         
-        // Reset pulsing flag after transition completes
+        // Re-enable gradient animation after fade completes
         setTimeout(() => {
+          body.classList.remove('gradient-paused');
           isPulsing = false;
-        }, 300); // Match the CSS transition duration
-      }, 50); // Very short duration for the black state
+        }, 50); // Small delay to ensure smooth transition
+      }, fadeDuration - 50); // Subtract small buffer for smooth transition
     }
 
     function stopBPMBackgroundSync() {
@@ -1197,6 +1211,7 @@
       // Reset background to normal
       const body = document.getElementById('body');
       body.classList.remove('bpm-pulse');
+      body.classList.remove('gradient-paused');
       isPulsing = false;
     }
 
