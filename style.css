@@ -261,7 +261,7 @@ div {
 
 /*BG ANIM*/
 body {
-  background: linear-gradient(135deg, #321e7f, #151b33);
+  background: linear-gradient(135deg, #321e7f, #000000);
   background-size: 800% 800%;
   animation: gradientShift 20s ease infinite;
 }
