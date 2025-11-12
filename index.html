@@ -246,7 +246,7 @@
       background: linear-gradient(135deg, #321e7f, #151b33);
       background-size: 800% 800%;
       animation: gradientShift 20s ease infinite;
-      transition: background-color 0.6s ease; /* Smooth transition for fade back */
+      transition: background-color 0.3s ease; /* Faster transition for more noticeable effect */
     }
 
     /* Pause gradient animation during BPM pulse */
@@ -260,10 +260,11 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* BPM Pulse Effect - Instant black, smooth fade back */
+    /* BPM Pulse Effect - STRONGER VISUAL */
     .bpm-pulse {
-      background-color: #000000 !important; /* Instant black */
+      background: #000000 !important; /* Pure black for maximum contrast */
       animation: none !important; /* Stop gradient animation */
+      box-shadow: 0 0 100px rgba(0, 234, 255, 0.8) inset; /* Add glowing inset shadow */
     }
 
     /* Audio Player Styles - FIXED POSITION */
@@ -1155,7 +1156,7 @@
       }
     }
 
-    // ==================== ENHANCED BPM BACKGROUND SYNC ====================
+    // ==================== ENHANCED BPM BACKGROUND SYNC - MORE VISIBLE ====================
     
     function startBPMBackgroundSync(bpm = 90) {
       currentBPM = bpm;
@@ -1185,11 +1186,13 @@
       // Pause the gradient animation
       body.classList.add('gradient-paused');
       
-      // Instantly apply black background
+      // Instantly apply black background with stronger visual effect
       body.classList.add('bpm-pulse');
       
-      // Calculate fade duration (entire interval until next beat)
-      const fadeDuration = (60 / currentBPM) * 1000;
+      // Calculate fade duration (make it longer for more noticeable effect)
+      const fadeDuration = (60 / currentBPM) * 1000 * 0.8; // 80% of beat interval
+      
+      console.log(`BPM Pulse: ${currentBPM} BPM, Fade duration: ${fadeDuration}ms`);
       
       // Remove the black background after the fade duration to trigger the fade back
       setTimeout(() => {
@@ -1199,8 +1202,8 @@
         setTimeout(() => {
           body.classList.remove('gradient-paused');
           isPulsing = false;
-        }, 50); // Small delay to ensure smooth transition
-      }, fadeDuration - 50); // Subtract small buffer for smooth transition
+        }, 100); // Small delay to ensure smooth transition
+      }, fadeDuration);
     }
 
     function stopBPMBackgroundSync() {
@@ -1504,7 +1507,7 @@
             playBtn.textContent = '❚❚';
             initAudioContext();
             
-            // Start BPM background sync (adjust BPM value as needed for your song)
+            // Start BPM background sync with more noticeable effect
             startBPMBackgroundSync(90);
           }).catch(error => {
             console.error("Error playing audio:", error);
