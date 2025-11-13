@@ -124,6 +124,15 @@
     body {
       font-family: 'Baloo 2', 'Ubuntu', verdana, sans-serif;
       line-height: 1.5;
+      background: linear-gradient(135deg, #321e7f, #151b33);
+      background-size: 800% 800%;
+      animation: gradientShift 20s ease infinite;
+      transition: background 1.5s ease; /* Smooth transition for background fade */
+    }
+
+    body.fade-to-black {
+      background: #000000 !important;
+      animation: none; /* Disable gradient animation when fading to black */
     }
 
     html, body {
@@ -241,29 +250,109 @@
       }
     }
 
-    /* Enhanced BPM Background Animation */
-    body {
-      background: linear-gradient(135deg, #321e7f, #151b33);
-      background-size: 800% 800%;
-      animation: gradientShift 20s ease infinite;
-      transition: background-color 1s linear; /* Matches BPM duration */
-    }
-
-    /* Pause the gradient animation */
-    body.animation-paused {
-      animation-play-state: paused;
-    }
-
     @keyframes gradientShift {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
 
-    /* BPM Pulse Effect - Instant black, smooth fade to next beat */
-    .bpm-pulse {
-      background-color: #000000 !important;
-      animation-play-state: paused; /* Pause gradient animation during black phase */
+    /* Image Carousel Styles */
+    .carousel-container {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+      overflow: hidden;
+      border-radius: 10px;
+    }
+
+    .carousel-track {
+      display: flex;
+      transition: transform 0.5s ease;
+      height: 300px;
+    }
+
+    .carousel-slide {
+      min-width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .carousel-image {
+      width: 90%;
+      height: 90%;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 2px solid #00eaff;
+      box-shadow: 0 0 15px rgba(0, 234, 255, 0.7);
+      transition: all 0.5s ease;
+    }
+
+    .carousel-slide.active .carousel-image {
+      transform: scale(1.05);
+      opacity: 1;
+    }
+
+    .carousel-slide:not(.active) .carousel-image {
+      transform: scale(0.95);
+      opacity: 0.7;
+    }
+
+    .carousel-nav {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .carousel-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      border: 2px solid #00eaff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .carousel-dot.active {
+      background: #00eaff;
+      transform: scale(1.2);
+    }
+
+    .carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 234, 255, 0.3);
+      border: none;
+      color: white;
+      font-size: 24px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+
+    .carousel-arrow:hover {
+      background: rgba(0, 234, 255, 0.6);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .carousel-arrow.prev {
+      left: 10px;
+    }
+
+    .carousel-arrow.next {
+      right: 10px;
     }
 
     /* Audio Player Styles - FIXED POSITION */
@@ -646,6 +735,14 @@
         right: 30px;
         padding: 10px 20px;
       }
+
+      .carousel-container {
+        max-width: 350px;
+      }
+
+      .carousel-track {
+        height: 250px;
+      }
     }
 
     @media (max-width: 480px) {
@@ -684,6 +781,20 @@
         right: 20px;
         padding: 8px 16px;
         font-size: min(4vw, 14px);
+      }
+
+      .carousel-container {
+        max-width: 300px;
+      }
+
+      .carousel-track {
+        height: 200px;
+      }
+
+      .carousel-arrow {
+        width: 35px;
+        height: 35px;
+        font-size: 20px;
       }
     }
 
@@ -759,7 +870,17 @@
       <div class="div-line" id="bold"></div>
 
       <div class="hCon" id="border">
-        <img src="profile.png" alt="Miau" id="small">
+        <!-- Image Carousel -->
+        <div class="carousel-container">
+          <div class="carousel-track" id="carouselTrack">
+            <!-- Images will be added dynamically by JavaScript -->
+          </div>
+          <button class="carousel-arrow prev" id="prevBtn">❮</button>
+          <button class="carousel-arrow next" id="nextBtn">❯</button>
+          <div class="carousel-nav" id="carouselNav">
+            <!-- Navigation dots will be added dynamically -->
+          </div>
+        </div>
 
         <p>This page is still in progress btw<br>Nothing much to show for now, but you can check my other socials here. Discord user is <strong>MaybeWasAngery</strong> btw</p>
 
@@ -941,7 +1062,7 @@
     async function initializeLoadingScreen() {
       console.log("Starting resource loading...");
       
-      // List all resources to preload
+      // List all resources to preload - FIXED: Added all required resources
       const resources = [
         { src: 'guy.gif', type: 'image', name: 'Loading GIF' },
         { src: 'profile.png', type: 'image', name: 'Profile Image' },
@@ -986,15 +1107,117 @@
       }, 10000);
     }
     
-    // Initialize audio system after loading
-    function initializeAudioSystem() {
-      console.log("Initializing audio system...");
-      // Your existing audio initialization code will run here
-      // This ensures audio is ready after everything is loaded
+    // ==================== IMAGE CAROUSEL SYSTEM ====================
+    
+    let currentSlide = 0;
+    
+    // Image data - EASILY CONFIGURABLE
+    const carouselImages = [
+      { src: 'profile.png', alt: 'Image1' },
+      { src: 'unorender.png', alt: 'Image2' },
+      { src: 'allblackfits.png', alt: 'Image3' },
+      { src: 'happeycupcake.png', alt: 'Image4' }
+      // Add more images as needed by copying the format above
+    ];
+    
+    function initializeCarousel() {
+      const track = document.getElementById('carouselTrack');
+      const nav = document.getElementById('carouselNav');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      
+      // Create slides
+      carouselImages.forEach((image, index) => {
+        const slide = document.createElement('div');
+        slide.className = `carousel-slide ${index === 0 ? 'active' : ''}`;
+        
+        const img = document.createElement('img');
+        img.src = image.src;
+        img.alt = image.alt;
+        img.className = 'carousel-image';
+        
+        slide.appendChild(img);
+        track.appendChild(slide);
+        
+        // Create navigation dot
+        const dot = document.createElement('div');
+        dot.className = `carousel-dot ${index === 0 ? 'active' : ''}`;
+        dot.addEventListener('click', () => goToSlide(index));
+        nav.appendChild(dot);
+      });
+      
+      // Event listeners for arrows
+      prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1));
+      nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1));
+      
+      // Touch/swipe support
+      let startX = 0;
+      let endX = 0;
+      
+      track.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+      });
+      
+      track.addEventListener('touchend', (e) => {
+        endX = e.changedTouches[0].clientX;
+        handleSwipe();
+      });
+      
+      function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = startX - endX;
+        
+        if (Math.abs(diff) > swipeThreshold) {
+          if (diff > 0) {
+            // Swipe left - next slide
+            goToSlide(currentSlide + 1);
+          } else {
+            // Swipe right - previous slide
+            goToSlide(currentSlide - 1);
+          }
+        }
+      }
     }
     
-    // Start loading process when script runs
-    initializeLoadingScreen();
+    function goToSlide(slideIndex) {
+      const slides = document.querySelectorAll('.carousel-slide');
+      const dots = document.querySelectorAll('.carousel-dot');
+      const track = document.getElementById('carouselTrack');
+      
+      // Handle wrap-around
+      if (slideIndex < 0) {
+        slideIndex = slides.length - 1;
+      } else if (slideIndex >= slides.length) {
+        slideIndex = 0;
+      }
+      
+      // Update current slide
+      currentSlide = slideIndex;
+      
+      // Update track position
+      track.style.transform = `translateX(-${slideIndex * 100}%)`;
+      
+      // Update active states
+      slides.forEach((slide, index) => {
+        slide.classList.toggle('active', index === slideIndex);
+      });
+      
+      dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === slideIndex);
+      });
+    }
+
+    // ==================== BACKGROUND FADE SYSTEM ====================
+    
+    function fadeBackgroundToBlack() {
+      const body = document.getElementById('body');
+      body.classList.add('fade-to-black');
+    }
+    
+    function restoreBackground() {
+      const body = document.getElementById('body');
+      body.classList.remove('fade-to-black');
+    }
 
     // ==================== LYRICS SYSTEM ====================
     
@@ -1078,8 +1301,6 @@
 
     let lyrics = [];
     let currentLyricIndex = 0;
-    let bpmInterval;
-    let isPulsing = false;
 
     // Parse LRC format
     function parseLRC(lrcText) {
@@ -1152,71 +1373,6 @@
         
         currentLyricIndex = newIndex;
       }
-    }
-
-    // ==================== ENHANCED BPM BACKGROUND SYNC ====================
-    
-    function startBPMBackgroundSync(bpm = 120) {
-      // Calculate interval based on BPM (beats per minute to milliseconds)
-      const interval = (60 / bpm) * 1000;
-      
-      // Clear existing interval
-      if (bpmInterval) {
-        clearInterval(bpmInterval);
-      }
-      
-      // Set the transition duration to match the beat interval
-      const body = document.getElementById('body');
-      body.style.transition = `background-color ${interval}ms linear`;
-      
-      // Create new interval for BPM sync
-      bpmInterval = setInterval(() => {
-        if (!isPulsing) {
-          pulseBackground(interval);
-        }
-      }, interval);
-    }
-
-    function pulseBackground(interval) {
-      if (isPulsing) return;
-      
-      isPulsing = true;
-      const body = document.getElementById('body');
-      
-      // Pause the gradient animation
-      body.classList.add('animation-paused');
-      
-      // Instantly apply black background
-      body.classList.add('bpm-pulse');
-      
-      // After a very short delay, start the fade back
-      setTimeout(() => {
-        // Remove the black background to trigger the fade
-        body.classList.remove('bpm-pulse');
-        
-        // Re-enable the gradient animation after a short delay
-        setTimeout(() => {
-          body.classList.remove('animation-paused');
-        }, 50);
-        
-        // Reset pulsing flag after the full interval completes
-        setTimeout(() => {
-          isPulsing = false;
-        }, interval);
-      }, 10); // Very short delay to ensure black is applied
-    }
-
-    function stopBPMBackgroundSync() {
-      if (bpmInterval) {
-        clearInterval(bpmInterval);
-        bpmInterval = null;
-      }
-      // Reset background to normal
-      const body = document.getElementById('body');
-      body.classList.remove('bpm-pulse');
-      body.classList.remove('animation-paused');
-      body.style.transition = ''; // Reset to default
-      isPulsing = false;
     }
 
     // ==================== EXISTING FUNCTIONALITY ====================
@@ -1467,6 +1623,9 @@
       
       console.log("Audio system initializing...");
       
+      // Initialize image carousel
+      initializeCarousel();
+      
       // Parse and display lyrics
       lyrics = parseLRC(lrcData);
       displayLyrics();
@@ -1508,15 +1667,17 @@
             playBtn.textContent = '❚❚';
             initAudioContext();
             
-            // Start BPM background sync (adjust BPM value as needed for your song)
-            startBPMBackgroundSync(90);
+            // Fade background to black when music starts
+            fadeBackgroundToBlack();
           }).catch(error => {
             console.error("Error playing audio:", error);
           });
         } else {
           audio.pause();
           playBtn.textContent = '▶';
-          stopBPMBackgroundSync();
+          
+          // Restore background when music stops
+          restoreBackground();
         }
       });
       
@@ -1558,10 +1719,10 @@
         drawVisualizer();
       });
       
-      // Stop BPM sync when audio ends
+      // Restore background when audio ends
       audio.addEventListener('ended', () => {
-        stopBPMBackgroundSync();
         playBtn.textContent = '▶';
+        restoreBackground();
       });
       
       console.log("Audio system initialized successfully!");
@@ -1572,6 +1733,9 @@
       console.log("DOM fully loaded and parsed");
       // The loading system will handle resource loading and then initialize the audio system
     });
+
+    // Start loading process when script runs
+    initializeLoadingScreen();
   </script>
 
 </body>
