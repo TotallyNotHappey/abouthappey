@@ -121,18 +121,25 @@
       box-shadow: 0px 10px 10px #00eaff88;
     }
 
+    /* Background with fade to black capability */
     body {
       font-family: 'Baloo 2', 'Ubuntu', verdana, sans-serif;
       line-height: 1.5;
       background: linear-gradient(135deg, #321e7f, #151b33);
       background-size: 800% 800%;
       animation: gradientShift 20s ease infinite;
-      transition: background 1.5s ease; /* Smooth transition for background fade */
+      transition: background 2s ease;
     }
 
     body.fade-to-black {
       background: #000000 !important;
-      animation: none; /* Disable gradient animation when fading to black */
+      animation: none;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     html, body {
@@ -250,108 +257,114 @@
       }
     }
 
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    /* Image Carousel Styles */
-    .carousel-container {
+    /* Image Gallery Styles */
+    .image-gallery {
       position: relative;
       width: 100%;
-      max-width: 400px;
-      margin: 0 auto;
+      height: 300px;
+      margin: 20px 0;
       overflow: hidden;
       border-radius: 10px;
     }
 
-    .carousel-track {
-      display: flex;
-      transition: transform 0.5s ease;
-      height: 300px;
+    .gallery-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
     }
 
-    .carousel-slide {
-      min-width: 100%;
+    .gallery-slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
       height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
+      transition: transform 0.5s ease, opacity 0.5s ease;
+      opacity: 0;
+      transform: scale(0.8);
     }
 
-    .carousel-image {
-      width: 90%;
-      height: 90%;
-      object-fit: cover;
+    .gallery-slide.active {
+      opacity: 1;
+      transform: scale(1);
+      z-index: 2;
+    }
+
+    .gallery-slide.next {
+      opacity: 0;
+      transform: translateX(100%) scale(0.8);
+      z-index: 1;
+    }
+
+    .gallery-slide.prev {
+      opacity: 0;
+      transform: translateX(-100%) scale(0.8);
+      z-index: 1;
+    }
+
+    .gallery-slide img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
       border-radius: 10px;
       border: 2px solid #00eaff;
-      box-shadow: 0 0 15px rgba(0, 234, 255, 0.7);
-      transition: all 0.5s ease;
+      box-shadow: 0 0 20px rgba(0, 234, 255, 0.5);
     }
 
-    .carousel-slide.active .carousel-image {
-      transform: scale(1.05);
-      opacity: 1;
-    }
-
-    .carousel-slide:not(.active) .carousel-image {
-      transform: scale(0.95);
-      opacity: 0.7;
-    }
-
-    .carousel-nav {
+    .gallery-indicators {
       display: flex;
       justify-content: center;
       gap: 10px;
       margin-top: 15px;
     }
 
-    .carousel-dot {
+    .gallery-dot {
       width: 12px;
       height: 12px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.3);
-      border: 2px solid #00eaff;
       cursor: pointer;
       transition: all 0.3s ease;
     }
 
-    .carousel-dot.active {
+    .gallery-dot.active {
       background: #00eaff;
       transform: scale(1.2);
     }
 
-    .carousel-arrow {
+    .gallery-nav {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      background: rgba(0, 234, 255, 0.3);
-      border: none;
+      background: rgba(0, 234, 255, 0.2);
       color: white;
-      font-size: 24px;
+      border: none;
       width: 40px;
       height: 40px;
       border-radius: 50%;
       cursor: pointer;
+      z-index: 3;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 20px;
       transition: all 0.3s ease;
-      z-index: 10;
+      backdrop-filter: blur(5px);
     }
 
-    .carousel-arrow:hover {
-      background: rgba(0, 234, 255, 0.6);
+    .gallery-nav:hover {
+      background: rgba(0, 234, 255, 0.4);
       transform: translateY(-50%) scale(1.1);
     }
 
-    .carousel-arrow.prev {
+    .gallery-nav.prev {
       left: 10px;
     }
 
-    .carousel-arrow.next {
+    .gallery-nav.next {
       right: 10px;
     }
 
@@ -736,12 +749,14 @@
         padding: 10px 20px;
       }
 
-      .carousel-container {
-        max-width: 350px;
+      .image-gallery {
+        height: 250px;
       }
 
-      .carousel-track {
-        height: 250px;
+      .gallery-nav {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
       }
     }
 
@@ -783,18 +798,14 @@
         font-size: min(4vw, 14px);
       }
 
-      .carousel-container {
-        max-width: 300px;
-      }
-
-      .carousel-track {
+      .image-gallery {
         height: 200px;
       }
 
-      .carousel-arrow {
-        width: 35px;
-        height: 35px;
-        font-size: 20px;
+      .gallery-nav {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
       }
     }
 
@@ -821,6 +832,10 @@
       .skip-button {
         bottom: 15px;
         right: 15px;
+      }
+
+      .image-gallery {
+        height: 180px;
       }
     }
 
@@ -870,15 +885,15 @@
       <div class="div-line" id="bold"></div>
 
       <div class="hCon" id="border">
-        <!-- Image Carousel -->
-        <div class="carousel-container">
-          <div class="carousel-track" id="carouselTrack">
-            <!-- Images will be added dynamically by JavaScript -->
+        <!-- Image Gallery -->
+        <div class="image-gallery">
+          <div class="gallery-container" id="galleryContainer">
+            <!-- Images will be dynamically added here -->
           </div>
-          <button class="carousel-arrow prev" id="prevBtn">❮</button>
-          <button class="carousel-arrow next" id="nextBtn">❯</button>
-          <div class="carousel-nav" id="carouselNav">
-            <!-- Navigation dots will be added dynamically -->
+          <button class="gallery-nav prev">‹</button>
+          <button class="gallery-nav next">›</button>
+          <div class="gallery-indicators" id="galleryIndicators">
+            <!-- Indicators will be dynamically added here -->
           </div>
         </div>
 
@@ -1002,6 +1017,8 @@
           loadingScreen.remove();
           // Initialize audio system after loading is complete
           initializeAudioSystem();
+          // Initialize image gallery
+          initializeImageGallery();
         }, 800);
       }, 1000);
     }
@@ -1030,6 +1047,8 @@
           loadingScreen.remove();
           // Initialize audio system after loading is skipped
           initializeAudioSystem();
+          // Initialize image gallery
+          initializeImageGallery();
         }, 800);
       }, 500);
     }
@@ -1066,6 +1085,9 @@
       const resources = [
         { src: 'guy.gif', type: 'image', name: 'Loading GIF' },
         { src: 'profile.png', type: 'image', name: 'Profile Image' },
+        { src: 'image1.jpg', type: 'image', name: 'Gallery Image 1' },
+        { src: 'image2.jpg', type: 'image', name: 'Gallery Image 2' },
+        { src: 'image3.jpg', type: 'image', name: 'Gallery Image 3' },
         { src: 'guy.gif', type: 'image', name: 'Interactive GIF' },
         { src: 'guy.gif', type: 'image', name: 'Character GIF' },
         { src: 'FINDYOURFLAME.mp3', type: 'audio', name: 'Background Music' },
@@ -1107,58 +1129,72 @@
       }, 10000);
     }
     
-    // ==================== IMAGE CAROUSEL SYSTEM ====================
+    // ==================== IMAGE GALLERY SYSTEM ====================
     
-    let currentSlide = 0;
+    let currentImageIndex = 0;
+    let galleryImages = [];
     
-    // Image data - EASILY CONFIGURABLE
-    const carouselImages = [
-      { src: 'profile.png', alt: 'Image1' },
-      { src: 'unorender.png', alt: 'Image2' },
-      { src: 'allblackfits.png', alt: 'Image3' },
-      { src: 'happeycupcake.png', alt: 'Image4' }
-      // Add more images as needed by copying the format above
+    // Define your gallery images here - EASY TO MODIFY!
+    const galleryImageList = [
+      'profile.png',    // Main profile image
+      'unorender.png',     // Add your images here
+      'allblackfits.png',     // Add more images as needed
+      'happeycupcake.png'      // You can add as many as you want
     ];
     
-    function initializeCarousel() {
-      const track = document.getElementById('carouselTrack');
-      const nav = document.getElementById('carouselNav');
-      const prevBtn = document.getElementById('prevBtn');
-      const nextBtn = document.getElementById('nextBtn');
+    function initializeImageGallery() {
+      console.log("Initializing image gallery...");
       
-      // Create slides
-      carouselImages.forEach((image, index) => {
+      const galleryContainer = document.getElementById('galleryContainer');
+      const indicatorsContainer = document.getElementById('galleryIndicators');
+      
+      // Clear any existing content
+      galleryContainer.innerHTML = '';
+      indicatorsContainer.innerHTML = '';
+      
+      // Create slides and indicators for each image
+      galleryImageList.forEach((imageSrc, index) => {
+        // Create slide
         const slide = document.createElement('div');
-        slide.className = `carousel-slide ${index === 0 ? 'active' : ''}`;
+        slide.className = 'gallery-slide';
+        if (index === 0) {
+          slide.classList.add('active');
+        }
         
         const img = document.createElement('img');
-        img.src = image.src;
-        img.alt = image.alt;
-        img.className = 'carousel-image';
+        img.src = imageSrc;
+        img.alt = `Gallery image ${index + 1}`;
+        img.onerror = function() {
+          // If image fails to load, show a placeholder
+          this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzIxZTdmIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIHVuYXZhaWxhYmxlPC90ZXh0Pjwvc3ZnPg==';
+        };
         
         slide.appendChild(img);
-        track.appendChild(slide);
+        galleryContainer.appendChild(slide);
         
-        // Create navigation dot
-        const dot = document.createElement('div');
-        dot.className = `carousel-dot ${index === 0 ? 'active' : ''}`;
-        dot.addEventListener('click', () => goToSlide(index));
-        nav.appendChild(dot);
+        // Create indicator
+        const indicator = document.createElement('div');
+        indicator.className = 'gallery-dot';
+        if (index === 0) {
+          indicator.classList.add('active');
+        }
+        indicator.addEventListener('click', () => goToImage(index));
+        indicatorsContainer.appendChild(indicator);
       });
       
-      // Event listeners for arrows
-      prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1));
-      nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1));
+      // Add event listeners for navigation buttons
+      document.querySelector('.gallery-nav.prev').addEventListener('click', showPrevImage);
+      document.querySelector('.gallery-nav.next').addEventListener('click', showNextImage);
       
-      // Touch/swipe support
+      // Add swipe support for touch devices
       let startX = 0;
       let endX = 0;
       
-      track.addEventListener('touchstart', (e) => {
+      galleryContainer.addEventListener('touchstart', (e) => {
         startX = e.touches[0].clientX;
       });
       
-      track.addEventListener('touchend', (e) => {
+      galleryContainer.addEventListener('touchend', (e) => {
         endX = e.changedTouches[0].clientX;
         handleSwipe();
       });
@@ -1169,54 +1205,61 @@
         
         if (Math.abs(diff) > swipeThreshold) {
           if (diff > 0) {
-            // Swipe left - next slide
-            goToSlide(currentSlide + 1);
+            // Swipe left - next image
+            showNextImage();
           } else {
-            // Swipe right - previous slide
-            goToSlide(currentSlide - 1);
+            // Swipe right - previous image
+            showPrevImage();
           }
         }
       }
+      
+      console.log("Image gallery initialized with", galleryImageList.length, "images");
     }
     
-    function goToSlide(slideIndex) {
-      const slides = document.querySelectorAll('.carousel-slide');
-      const dots = document.querySelectorAll('.carousel-dot');
-      const track = document.getElementById('carouselTrack');
+    function showNextImage() {
+      goToImage((currentImageIndex + 1) % galleryImageList.length);
+    }
+    
+    function showPrevImage() {
+      goToImage((currentImageIndex - 1 + galleryImageList.length) % galleryImageList.length);
+    }
+    
+    function goToImage(index) {
+      if (index === currentImageIndex) return;
       
-      // Handle wrap-around
-      if (slideIndex < 0) {
-        slideIndex = slides.length - 1;
-      } else if (slideIndex >= slides.length) {
-        slideIndex = 0;
+      const slides = document.querySelectorAll('.gallery-slide');
+      const indicators = document.querySelectorAll('.gallery-dot');
+      
+      // Remove active classes
+      slides[currentImageIndex].classList.remove('active');
+      indicators[currentImageIndex].classList.remove('active');
+      
+      // Add appropriate transition classes based on direction
+      if (index > currentImageIndex) {
+        // Moving forward
+        slides[currentImageIndex].classList.add('prev');
+        slides[index].classList.add('next');
+      } else {
+        // Moving backward
+        slides[currentImageIndex].classList.add('next');
+        slides[index].classList.add('prev');
       }
       
-      // Update current slide
-      currentSlide = slideIndex;
+      // Update current index
+      currentImageIndex = index;
       
-      // Update track position
-      track.style.transform = `translateX(-${slideIndex * 100}%)`;
-      
-      // Update active states
-      slides.forEach((slide, index) => {
-        slide.classList.toggle('active', index === slideIndex);
-      });
-      
-      dots.forEach((dot, index) => {
-        dot.classList.toggle('active', index === slideIndex);
-      });
-    }
-
-    // ==================== BACKGROUND FADE SYSTEM ====================
-    
-    function fadeBackgroundToBlack() {
-      const body = document.getElementById('body');
-      body.classList.add('fade-to-black');
-    }
-    
-    function restoreBackground() {
-      const body = document.getElementById('body');
-      body.classList.remove('fade-to-black');
+      // After transition, update classes
+      setTimeout(() => {
+        // Remove all transition classes
+        slides.forEach(slide => {
+          slide.classList.remove('active', 'prev', 'next');
+        });
+        
+        // Set new active slide
+        slides[currentImageIndex].classList.add('active');
+        indicators[currentImageIndex].classList.add('active');
+      }, 500);
     }
 
     // ==================== LYRICS SYSTEM ====================
@@ -1373,6 +1416,14 @@
         
         currentLyricIndex = newIndex;
       }
+    }
+
+    // ==================== BACKGROUND FADE SYSTEM ====================
+    
+    function fadeBackgroundToBlack() {
+      const body = document.getElementById('body');
+      body.classList.add('fade-to-black');
+      console.log("Background fading to black...");
     }
 
     // ==================== EXISTING FUNCTIONALITY ====================
@@ -1623,9 +1674,6 @@
       
       console.log("Audio system initializing...");
       
-      // Initialize image carousel
-      initializeCarousel();
-      
       // Parse and display lyrics
       lyrics = parseLRC(lrcData);
       displayLyrics();
@@ -1675,9 +1723,6 @@
         } else {
           audio.pause();
           playBtn.textContent = '▶';
-          
-          // Restore background when music stops
-          restoreBackground();
         }
       });
       
@@ -1717,12 +1762,6 @@
       // Start visualization when audio plays
       audio.addEventListener('play', () => {
         drawVisualizer();
-      });
-      
-      // Restore background when audio ends
-      audio.addEventListener('ended', () => {
-        playBtn.textContent = '▶';
-        restoreBackground();
       });
       
       console.log("Audio system initialized successfully!");
