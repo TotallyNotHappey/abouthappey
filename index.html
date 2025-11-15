@@ -985,19 +985,15 @@
     let resourceTimeouts = new Map(); // Track timeouts for each resource
     
     // Function to update loading progress
-    function updateProgress(resourceName, isError = false) {
+    function updateProgress(resourceName) {
       loadedResources++;
       const progress = Math.min(100, Math.round((loadedResources / totalResources) * 100));
       progressBar.style.width = `${progress}%`;
       
-      // Show status with error indication if needed
-      if (isError) {
-        loadingStatus.textContent = `Loading... (${progress}%) - Skipped: ${resourceName}`;
-      } else {
-        loadingStatus.textContent = `Loading... (${progress}%)`;
-      }
+      // Show status
+      loadingStatus.textContent = `Loading... (${progress}%)`;
       
-      console.log(`Loaded: ${resourceName} (${loadedResources}/${totalResources})${isError ? ' - SKIPPED' : ''}`);
+      console.log(`Loaded: ${resourceName} (${loadedResources}/${totalResources})`);
       
       // Clear timeout for this resource if it exists
       if (resourceTimeouts.has(resourceName)) {
@@ -1081,7 +1077,7 @@
         // Set a timeout to skip this resource after 10 seconds
         const timeoutId = setTimeout(() => {
           console.warn(`Timeout: Skipping resource "${name}" (${src}) after 10 seconds`);
-          updateProgress(name, true);
+          updateProgress(name);
           resolve({src, type, name, error: true, timeout: true});
         }, 10000); // 10 seconds timeout
         
@@ -1096,7 +1092,7 @@
         
         resource.onerror = () => {
           console.warn(`Failed to load: ${name}`);
-          updateProgress(name, true);
+          updateProgress(name);
           resolve({src, type, name, error: true});
         };
         
@@ -1161,7 +1157,7 @@
           })
           .catch(error => {
             console.error(`Error loading ${resource.name}:`, error);
-            updateProgress(resource.name, true);
+            updateProgress(resource.name);
           })
       );
       
@@ -1740,51 +1736,27 @@
       
       // Audio context for visualization
       let vizAudioContext, analyser, source, dataArray;
+      let isVisualizerInitialized = false;
       
-      // Initialize audio context
-      function initAudioContext() {
-        if (!vizAudioContext) {
-          vizAudioContext = new (window.AudioContext || window.webkitAudioContext)();
-          analyser = vizAudioContext.createAnalyser();
-          source = vizAudioContext.createMediaElementSource(audio);
-          source.connect(analyser);
-          analyser.connect(vizAudioContext.destination);
-          
-          analyser.fftSize = 256;
-          const bufferLength = analyser.frequencyBinCount;
-          dataArray = new Uint8Array(bufferLength);
-        }
+      // Initialize audio context and visualizer
+      function initAudioVisualizer() {
+        if (isVisualizerInitialized) return;
+        
+        vizAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = vizAudioContext.createAnalyser();
+        source = vizAudioContext.createMediaElementSource(audio);
+        source.connect(analyser);
+        analyser.connect(vizAudioContext.destination);
+        
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
+        
+        isVisualizerInitialized = true;
+        console.log("Audio visualizer initialized");
       }
       
-      // Play/Pause functionality
-      playBtn.addEventListener('click', () => {
-        if (audio.paused) {
-          audio.play().then(() => {
-            playBtn.textContent = '❚❚';
-            initAudioContext();
-            
-            // Fade background to black when music starts
-            fadeBackgroundToBlack();
-          }).catch(error => {
-            console.error("Error playing audio:", error);
-          });
-        } else {
-          audio.pause();
-          playBtn.textContent = '▶';
-        }
-      });
-      
-      // Volume control
-      volumeSlider.addEventListener('input', () => {
-        audio.volume = volumeSlider.value;
-      });
-      
-      // Update lyrics in real-time
-      audio.addEventListener('timeupdate', () => {
-        updateLyrics(audio.currentTime);
-      });
-      
-      // Audio visualizer
+      // Audio visualizer function
       function drawVisualizer() {
         if (!analyser) return;
         
@@ -1807,9 +1779,39 @@
         }
       }
       
-      // Start visualization when audio plays
-      audio.addEventListener('play', () => {
-        drawVisualizer();
+      // Play/Pause functionality
+      playBtn.addEventListener('click', () => {
+        if (audio.paused) {
+          audio.play().then(() => {
+            playBtn.textContent = '❚❚';
+            
+            // Initialize visualizer on first play
+            if (!isVisualizerInitialized) {
+              initAudioVisualizer();
+            }
+            
+            // Start visualization
+            drawVisualizer();
+            
+            // Fade background to black when music starts
+            fadeBackgroundToBlack();
+          }).catch(error => {
+            console.error("Error playing audio:", error);
+          });
+        } else {
+          audio.pause();
+          playBtn.textContent = '▶';
+        }
+      });
+      
+      // Volume control
+      volumeSlider.addEventListener('input', () => {
+        audio.volume = volumeSlider.value;
+      });
+      
+      // Update lyrics in real-time
+      audio.addEventListener('timeupdate', () => {
+        updateLyrics(audio.currentTime);
       });
       
       console.log("Audio system initialized successfully!");
