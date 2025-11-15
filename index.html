@@ -1582,9 +1582,10 @@
         // Get time domain data for oscilloscope
         analyser.getByteTimeDomainData(dataArray);
         
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Clear the canvas completely - no after-images
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
+        // Draw the waveform
         ctx.lineWidth = 2;
         ctx.strokeStyle = '#00eaff';
         ctx.beginPath();
@@ -1605,7 +1606,6 @@
           x += sliceWidth;
         }
         
-        ctx.lineTo(canvas.width, canvas.height / 2);
         ctx.stroke();
         
         visualizerAnimationId = requestAnimationFrame(drawOscilloscope);
@@ -1618,8 +1618,7 @@
         }
         
         // Clear canvas when stopped
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
       
       playBtn.addEventListener('click', () => {
