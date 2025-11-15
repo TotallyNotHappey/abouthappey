@@ -9,7 +9,7 @@
   <link rel="icon" type="image/png" href="fav-icon.png">
   
   <meta property="og:title" content="Happey" />
-  <meta property="og:description" content="evil embed or smth lol" />
+  <meta property="og:description" content="Enby that can do 3D animation and somewhat good at making music" />
   <meta property="og:url" content="https://github.com/TotallyNotHappey/abouthappey" />
   <meta property="og:type" content="website" />
 
@@ -880,7 +880,7 @@
 
       <h1>Happey</h1>
 
-      <p>Enby that can animate on Roblox</p>
+      <p>Enby that can do 3D animation and somewhat good at making music</p>
 
       <div class="div-line" id="bold"></div>
 
@@ -897,7 +897,7 @@
           </div>
         </div>
 
-        <p>This page is still in progress btw<br>Nothing much to show for now, but you can check my other socials here. Discord user is <strong>MaybeWasAngery</strong> btw</p>
+        <p>This page is still in progress btw<br>Most of the stuff I did, like renders and art (excluding the first one) is made by me!<br>Nothing much to show for now, but you can check my other socials here. Discord user is <strong>MaybeWasAngery</strong> btw</p>
 
         <div class="outline">
           <a href="https://www.youtube.com/@TotallyNotHappey" class="anchor" style="color: #fff;">YouTube</a>
@@ -982,17 +982,28 @@
     let skipButton = document.getElementById('skipButton');
     let resourcesToLoad = [];
     let loadingComplete = false;
+    let resourceTimeouts = new Map(); // Track timeouts for each resource
     
     // Function to update loading progress
-    function updateProgress(resourceName) {
+    function updateProgress(resourceName, isError = false) {
       loadedResources++;
       const progress = Math.min(100, Math.round((loadedResources / totalResources) * 100));
       progressBar.style.width = `${progress}%`;
       
-      // Simplified loading text - just show "Loading..." with percentage
-      loadingStatus.textContent = `Loading... (${progress}%)`;
+      // Show status with error indication if needed
+      if (isError) {
+        loadingStatus.textContent = `Loading... (${progress}%) - Skipped: ${resourceName}`;
+      } else {
+        loadingStatus.textContent = `Loading... (${progress}%)`;
+      }
       
-      console.log(`Loaded: ${resourceName} (${loadedResources}/${totalResources})`);
+      console.log(`Loaded: ${resourceName} (${loadedResources}/${totalResources})${isError ? ' - SKIPPED' : ''}`);
+      
+      // Clear timeout for this resource if it exists
+      if (resourceTimeouts.has(resourceName)) {
+        clearTimeout(resourceTimeouts.get(resourceName));
+        resourceTimeouts.delete(resourceName);
+      }
       
       // If everything is loaded, show "Finalized!" message
       if (loadedResources >= totalResources) {
@@ -1006,6 +1017,11 @@
       
       loadingComplete = true;
       loadingStatus.textContent = "Finalized!";
+      
+      // Clear all remaining timeouts
+      resourceTimeouts.forEach(timeout => clearTimeout(timeout));
+      resourceTimeouts.clear();
+      
       console.log("All resources loaded successfully!");
       
       setTimeout(() => {
@@ -1036,6 +1052,10 @@
         loadedResources++;
       }
       
+      // Clear all timeouts
+      resourceTimeouts.forEach(timeout => clearTimeout(timeout));
+      resourceTimeouts.clear();
+      
       progressBar.style.width = '100%';
       loadingStatus.textContent = "Skipped!";
       
@@ -1053,19 +1073,31 @@
       }, 500);
     }
     
-    // Function to preload and track resources
+    // Function to preload and track resources with timeout
     function preloadResource(src, type, name) {
       return new Promise((resolve, reject) => {
         const resource = type === 'image' ? new Image() : document.createElement(type);
         
+        // Set a timeout to skip this resource after 10 seconds
+        const timeoutId = setTimeout(() => {
+          console.warn(`Timeout: Skipping resource "${name}" (${src}) after 10 seconds`);
+          updateProgress(name, true);
+          resolve({src, type, name, error: true, timeout: true});
+        }, 10000); // 10 seconds timeout
+        
+        // Store timeout ID for potential cancellation
+        resourceTimeouts.set(name, timeoutId);
+        
         resource.onload = () => {
           console.log(`Successfully loaded: ${name}`);
+          updateProgress(name);
           resolve({src, type, name});
         };
         
         resource.onerror = () => {
           console.warn(`Failed to load: ${name}`);
-          resolve({src, type, name, error: true}); // Resolve even on error to continue loading
+          updateProgress(name, true);
+          resolve({src, type, name, error: true});
         };
         
         if (type === 'image') {
@@ -1077,11 +1109,26 @@
       });
     }
     
+    // Function to simulate loading for resources that don't have proper load events
+    function simulateProgress() {
+      const simulatedResources = ['CSS Styles', 'DOM Content', 'JavaScript'];
+      let simulatedIndex = 0;
+      
+      const simulation = setInterval(() => {
+        if (simulatedIndex < simulatedResources.length && !loadingComplete) {
+          updateProgress(simulatedResources[simulatedIndex]);
+          simulatedIndex++;
+        } else {
+          clearInterval(simulation);
+        }
+      }, 500);
+    }
+    
     // Function to count and preload all resources
     async function initializeLoadingScreen() {
       console.log("Starting resource loading...");
       
-      // List all resources to preload - FIXED: Added all required resources
+      // List all resources to preload
       const resources = [
         { src: 'guy.gif', type: 'image', name: 'Loading GIF' },
         { src: 'profile.png', type: 'image', name: 'Profile Image' },
@@ -1096,37 +1143,38 @@
         { src: 'fav-icon.png', type: 'image', name: 'Favicon' }
       ];
       
-      totalResources = resources.length + 1; // +1 for DOM content
+      totalResources = resources.length + 3; // +3 for simulated resources
       resourcesToLoad = resources;
       
       // Add event listener for skip button
       skipButton.addEventListener('click', skipLoading);
       
+      // Start simulated progress for resources without proper load events
+      simulateProgress();
+      
       // Preload all resources
       const loadPromises = resources.map(resource => 
         preloadResource(resource.src, resource.type, resource.name)
-          .then(result => updateProgress(result.name))
+          .then(result => {
+            // Result is already handled in preloadResource
+            return result;
+          })
           .catch(error => {
             console.error(`Error loading ${resource.name}:`, error);
-            updateProgress(resource.name);
+            updateProgress(resource.name, true);
           })
       );
       
-      // Track DOM content loaded
-      document.addEventListener('DOMContentLoaded', () => {
-        updateProgress('Page Structure');
-      });
+      // Fallback: if everything isn't loaded in 15 seconds, force completion
+      setTimeout(() => {
+        if (!loadingComplete) {
+          console.log("Overall loading timeout reached, forcing completion");
+          completeLoading();
+        }
+      }, 15000);
       
       // Wait for all resources to load (or fail)
       await Promise.allSettled(loadPromises);
-      
-      // Fallback: if everything isn't loaded in 10 seconds, force completion
-      setTimeout(() => {
-        if (!loadingComplete && loadedResources < totalResources) {
-          console.log("Loading timeout reached, forcing completion");
-          completeLoading();
-        }
-      }, 10000);
     }
     
     // ==================== IMAGE GALLERY SYSTEM ====================
