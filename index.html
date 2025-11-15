@@ -1572,7 +1572,7 @@
         source.connect(analyser);
         analyser.connect(vizAudioContext.destination);
         
-        analyser.fftSize = 32;
+        analyser.fftSize = 64;
         const bufferLength = analyser.frequencyBinCount;
         dataArray = new Uint8Array(bufferLength);
         
