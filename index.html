@@ -855,7 +855,7 @@
       <h1>Happey</h1>
 
       <p>Enby that can do 3D animation and somewhat good at making music</p>
-      <p style="color: #00eaff; font-size: 1.1em; margin-top: -10px; margin-bottom: 20px;">(Please don't use the audio visualizer if your epileptic)</p>
+      <p style="color: #00eaff; font-size: 18px; margin-top: 10px;">Currently working on personal projects and commissions!</p>
 
       <div class="div-line" id="bold"></div>
 
@@ -1569,9 +1569,9 @@
         source.connect(analyser);
         analyser.connect(vizAudioContext.destination);
         
-        // Oscilloscope settings
-        analyser.fftSize = 2048; // Higher for smoother waveform
-        const bufferLength = analyser.frequencyBinCount;
+        // Use waveform data for oscilloscope
+        analyser.fftSize = 2048;
+        const bufferLength = analyser.fftSize;
         dataArray = new Uint8Array(bufferLength);
         
         isVisualizerInitialized = true;
@@ -1580,19 +1580,45 @@
       function drawOscilloscope() {
         if (!analyser) return;
         
+        // Get waveform data (time domain)
         analyser.getByteTimeDomainData(dataArray);
         
+        // Clear canvas
         ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
+        // Draw grid
+        ctx.strokeStyle = 'rgba(0, 234, 255, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        
+        // Horizontal center line
+        ctx.moveTo(0, canvas.height / 2);
+        ctx.lineTo(canvas.width, canvas.height / 2);
+        
+        // Vertical lines
+        for (let x = 0; x < canvas.width; x += 20) {
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+        }
+        
+        // Horizontal lines
+        for (let y = 0; y < canvas.height; y += 20) {
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+        }
+        
+        ctx.stroke();
+        
+        // Draw waveform
         ctx.lineWidth = 2;
         ctx.strokeStyle = '#00eaff';
         ctx.beginPath();
         
-        const sliceWidth = canvas.width / dataArray.length;
+        const sliceWidth = canvas.width / bufferLength;
         let x = 0;
         
-        for (let i = 0; i < dataArray.length; i++) {
+        for (let i = 0; i < bufferLength; i++) {
           const v = dataArray[i] / 128.0;
           const y = v * canvas.height / 2;
           
@@ -1617,7 +1643,7 @@
           visualizerAnimationId = null;
         }
         
-        // Clear canvas when stopped
+        // Clear canvas
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
