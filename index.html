@@ -424,29 +424,18 @@
       cursor: pointer;
     }
     
-    /* Heartbeat Monitor Style Visualizer */
-    .visualizer-container {
+    /* Oscilloscope Visualizer Styles */
+    .oscilloscope-container {
       width: 100%;
       height: 100px;
-      background: rgba(0, 20, 30, 0.8);
-      border-radius: 8px;
       margin-bottom: 15px;
       position: relative;
       overflow: hidden;
-      border: 1px solid #00eaff;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.7);
     }
     
-    .visualizer-line {
-      position: absolute;
-      top: 50%;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: #00eaff;
-      opacity: 0.3;
-    }
-    
-    #visualizerCanvas {
+    #oscilloscopeCanvas {
       width: 100%;
       height: 100%;
       display: block;
@@ -866,7 +855,7 @@
       <h1>Happey</h1>
 
       <p>Enby that can do 3D animation and somewhat good at making music</p>
-      <p style="color: #00eaff; font-size: 18px; margin-top: -10px; margin-bottom: 20px;">(DO NOT USE THE AUDIO PLAYER IF YOU HAVE EPILEPSY)</p>
+      <p style="color: #00eaff; font-size: 1.1em; margin-top: -10px; margin-bottom: 20px;">(Please don't use the audio visualizer if your epileptic)</p>
 
       <div class="div-line" id="bold"></div>
 
@@ -933,9 +922,9 @@
       </div>
     </div>
     
-    <div class="visualizer-container">
-      <div class="visualizer-line"></div>
-      <canvas id="visualizerCanvas"></canvas>
+    <!-- Oscilloscope Visualizer -->
+    <div class="oscilloscope-container">
+      <canvas id="oscilloscopeCanvas"></canvas>
     </div>
 
     <div class="lyrics-container" id="lyricsContainer">
@@ -1557,93 +1546,69 @@
       const audio = document.getElementById('bgAudio');
       const playBtn = document.getElementById('playBtn');
       const volumeSlider = document.getElementById('volumeSlider');
-      const canvas = document.getElementById('visualizerCanvas');
+      const canvas = document.getElementById('oscilloscopeCanvas');
       const ctx = canvas.getContext('2d');
       
-      // Set canvas size
+      // Set canvas dimensions
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
       
       lyrics = parseLRC(lrcData);
       displayLyrics();
       
-      let vizAudioContext, analyser, dataArray;
+      let vizAudioContext, analyser, source, dataArray;
       let isVisualizerInitialized = false;
       let visualizerAnimationId = null;
-      
-      // Heartbeat monitor data
-      let points = [];
-      let xPos = 0;
       
       function initAudioVisualizer() {
         if (isVisualizerInitialized) return;
         
         vizAudioContext = new (window.AudioContext || window.webkitAudioContext)();
         analyser = vizAudioContext.createAnalyser();
-        const source = vizAudioContext.createMediaElementSource(audio);
+        source = vizAudioContext.createMediaElementSource(audio);
         source.connect(analyser);
         analyser.connect(vizAudioContext.destination);
         
-        analyser.fftSize = 256;
+        // Oscilloscope settings
+        analyser.fftSize = 2048; // Higher for smoother waveform
         const bufferLength = analyser.frequencyBinCount;
         dataArray = new Uint8Array(bufferLength);
         
         isVisualizerInitialized = true;
       }
       
-      function drawHeartbeat() {
+      function drawOscilloscope() {
         if (!analyser) return;
         
-        analyser.getByteFrequencyData(dataArray);
+        analyser.getByteTimeDomainData(dataArray);
         
-        // Calculate average volume
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-          sum += dataArray[i];
-        }
-        const average = sum / dataArray.length;
-        
-        // Normalize to -1 to 1 range for heartbeat effect
-        const normalized = (average / 128) - 1;
-        
-        // Create heartbeat-like waveform
-        const y = canvas.height / 2 + (normalized * 30);
-        
-        // Add new point
-        points.push({x: xPos, y: y});
-        
-        // Move points to the left
-        points.forEach(point => {
-          point.x -= 2;
-        });
-        
-        // Remove points that are off screen
-        points = points.filter(point => point.x > -10);
-        
-        // Clear canvas
-        ctx.fillStyle = 'rgba(0, 20, 30, 0.1)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Draw the line
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#00eaff';
         ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
         
-        for (let i = 1; i < points.length; i++) {
-          ctx.lineTo(points[i].x, points[i].y);
+        const sliceWidth = canvas.width / dataArray.length;
+        let x = 0;
+        
+        for (let i = 0; i < dataArray.length; i++) {
+          const v = dataArray[i] / 128.0;
+          const y = v * canvas.height / 2;
+          
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+          
+          x += sliceWidth;
         }
         
-        ctx.strokeStyle = '#00eaff';
-        ctx.lineWidth = 2;
+        ctx.lineTo(canvas.width, canvas.height / 2);
         ctx.stroke();
         
-        // Increment x position
-        xPos += 2;
-        if (xPos > canvas.width + 10) {
-          xPos = 0;
-          points = [];
-        }
-        
-        visualizerAnimationId = requestAnimationFrame(drawHeartbeat);
+        visualizerAnimationId = requestAnimationFrame(drawOscilloscope);
       }
       
       function stopVisualizer() {
@@ -1652,13 +1617,9 @@
           visualizerAnimationId = null;
         }
         
-        // Clear canvas
-        ctx.fillStyle = 'rgba(0, 20, 30, 1)';
+        // Clear canvas when stopped
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Reset points
-        points = [];
-        xPos = 0;
       }
       
       playBtn.addEventListener('click', () => {
@@ -1670,7 +1631,7 @@
               initAudioVisualizer();
             }
             
-            drawHeartbeat();
+            drawOscilloscope();
             
             fadeBackgroundToBlack();
           }).catch(error => {
