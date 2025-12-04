@@ -120,21 +120,66 @@
     body {
       font-family: 'Deltarune', 'Ubuntu', verdana, sans-serif;
       line-height: 1.5;
-      background: linear-gradient(135deg, #321e7f, #151b33);
-      background-size: 800% 800%;
-      animation: gradientShift 20s ease infinite;
-      transition: background 2s ease;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
     }
 
-    body.fade-to-black {
-      background: #000000 !important;
-      animation: none;
+    /* CYBERPUNK BACKGROUND DESIGN */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      background: linear-gradient(45deg, #00318F 0%, #004a8f 60%);
     }
 
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background-image: url('data:image/svg+xml;charset=utf8,%3Csvg%20width%3D%22640%22%20height%3D%22480%22%20viewBox%3D%220%200%20640%20480%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20preserveAspectRatio%3D%22none%22%3E%20%3Cstyle%3E%20%3Aroot%20%7B%20opacity%3A%200.5%3B%20%7D%20path%20%7B%20fill%3A%20%23000000%3B%20stroke%3A%20none%3B%20stroke-width%3A%200%3B%20vector-effect%3A%20non-scaling-stroke%3B%20%7D%20path.z0%20%7B%20fill%3A%20%237f7f7f%20%7D%20path.z1%20%7B%20fill%3A%20%235e5e5e%20%7D%20path.z2%20%7B%20fill%3A%20%233d3d3d%20%7D%20path.z3%20%7B%20fill%3A%20%231c1c1c%20%7D%20%3C%2Fstyle%3E%20%3Cpath%20d%3D%22m%200%2C68.5714%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C441.4286%20l%20-800%2C0%22%20transform%3D%22translate%280%2C133.7143%29%22%20class%3D%22z0%22%3E%20%3CanimateTransform%20attributeName%3D%22transform%22%20type%3D%22translate%22%20values%3D%220%20133.7143%3B-160%20133.7143%22%20dur%3D%2215000ms%22%20repeatCount%3D%22indefinite%22%3E%3C%2FanimateTransform%3E%20%3C%2Fpath%3E%20%3Cpath%20d%3D%22m%200%2C68.5714%20l%2040%2C0%20l%200%2C-120%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C0%20l%2040%2C0%20l%200%2C-120%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C0%20l%2040%2C0%20l%200%2C-120%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C411.4286%20l%20-960%2C0%22%20transform%3D%22translate%280%2C186.4615%29%22%20class%3D%22z1%22%3E%20%3CanimateTransform%20attributeName%3D%22transform%22%20type%3D%22translate%22%20values%3D%220%20186.4615%3B-320%20186.4615%22%20dur%3D%2215000ms%22%20repeatCount%3D%22indefinite%22%3E%3C%2FanimateTransform%3E%20%3C%2Fpath%3E%20%3Cpath%20d%3D%22m%200%2C-30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-120%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C68.5714%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C-38.5714%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-120%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C68.5714%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C471.4286%20l%20-1280%2C0%22%20transform%3D%22translate%280%2C239.2088%29%22%20class%3D%22z2%22%3E%20%3CanimateTransform%20attributeName%3D%22transform%22%20type%3D%22translate%22%20values%3D%220%20239.2088%3B-640%20239.2088%22%20dur%3D%2215000ms%22%20repeatCount%3D%22indefinite%22%3E%3C%2FanimateTransform%3E%20%3C%2Fpath%3E%20%3Cpath%20d%3D%22m%200%2C68.5714%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-60%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C471.4286%20l%20-1920%2C0%22%20transform%3D%22translate%280%2C291.956%29%22%20class%3D%22z3%22%3E%20%3CanimateTransform%20attributeName%3D%22transform%22%20type%3D%22translate%22%20values%3D%220%20291.956%3B-1280%20291.956%22%20dur%3D%2215000ms%22%20repeatCount%3D%22indefinite%22%3E%3C%2FanimateTransform%3E%20%3C%2Fpath%3E%20%3Cpath%20d%3D%22m%200%2C-30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C68.5714%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-98.5714%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C68.5714%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-98.5714%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C68.5714%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-98.5714%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C68.5714%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-98.5714%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C68.5714%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C-30%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C60%20l%2040%2C0%20l%200%2C-90%20l%2040%2C0%20l%200%2C30%20l%2040%2C0%20l%200%2C90%20l%2040%2C0%20l%200%2C411.4286%20l%20-3200%2C0%22%20transform%3D%22translate%280%2C344.7033%29%22%20class%3D%22z4%22%3E%20%3CanimateTransform%20attributeName%3D%22transform%22%20type%3D%22translate%22%20values%3D%220%20344.7033%3B-2560%20344.7033%22%20dur%3D%2215000ms%22%20repeatCount%3D%22indefinite%22%3E%3C%2FanimateTransform%3E%20%3C%2Fpath%3E%3C%2Fsvg%3E');
+      background-size: auto 100%;
+      background-position: center;
+      background-repeat: repeat-x;
+      opacity: 0.5;
+      animation: scrollBackground 60s linear infinite;
+    }
+
+    @keyframes scrollBackground {
+      0% {
+        background-position: 0% 0%;
+      }
+      100% {
+        background-position: 100% 0%;
+      }
+    }
+
+    body.fade-to-black::after {
+      opacity: 0.1;
+    }
+
+    /* SIMPLIFIED GEOMETRIC OVERLAY (just the background gradient) */
+    .geometric-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+      background-image: url('data:image/svg+xml;charset=utf8,%3Csvg%20width%3D%22640%22%20height%3D%22480%22%20viewBox%3D%220%200%20640%20480%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%20%3Cstyle%20type%3D%22text%2Fcss%22%3E%20rect%20%7B%20opacity%3A%200.5%3B%20%7D%20%3C%2Fstyle%3E%20%3Cg%20id%3D%22bg%22%3E%20%3ClinearGradient%20id%3D%22bggrad%22%20gradientUnits%3D%22userSpaceOnUse%22%20x1%3D%220%22%20y1%3D%22239.5937%22%20x2%3D%22640%22%20y2%3D%22239.5937%22%20gradientTransform%3D%22matrix%281%200%200%20-1%200%20479.5%29%22%3E%20%3Cstop%20offset%3D%220%22%20style%3D%22stop-color%3Atransparent%22%2F%3E%20%3Cstop%20offset%3D%220.3743%22%20style%3D%22stop-color%3Argba(33,33,33,0.502)%22%2F%3E%20%3Cstop%20offset%3D%220.7682%22%20style%3D%22stop-color%3Atransparent%22%2F%3E%20%3Cstop%20offset%3D%221%22%20style%3D%22stop-color%3Argba(33,33,33,0.502)%22%2F%3E%20%3C%2FlinearGradient%3E%20%3Crect%20style%3D%22fill%3Aurl%28%23bggrad%29%3B%22%20width%3D%22640%22%20height%3D%22479.8%22%20%2F%3E%20%3C%2Fg%3E%3C%2Fsvg%3E');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0.3;
     }
 
     html, body {
@@ -834,6 +879,9 @@
 </head>
 
 <body id="body">
+  
+  <!-- Geometric Pattern Overlay -->
+  <div class="geometric-overlay"></div>
 
   <div id="loadingScreen">
     <img src="guy.gif" alt="Loading" class="loading-gif">
