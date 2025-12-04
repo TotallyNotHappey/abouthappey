@@ -162,19 +162,92 @@
       }
     }
 
-body.fade-to-black {
-  background: #000000 !important;
-  /* Instead of animation: none; */
-  animation: pulseBackground 2s ease-in-out infinite !important;
-}
+    /* MUSIC PLAYING ANIMATIONS - ADDED HERE */
+    @keyframes musicPulse {
+      0%, 100% { 
+        opacity: 0.8;
+        box-shadow: inset 0 0 50px rgba(0, 234, 255, 0.1);
+      }
+      50% { 
+        opacity: 1;
+        box-shadow: inset 0 0 100px rgba(0, 234, 255, 0.3);
+      }
+    }
 
-@keyframes pulseBackground {
-  0%, 100% { 
-    background: #000000; 
-  }
-  50% { 
-    background: #111111; 
-  }
+    @keyframes musicColorShift {
+      0% { 
+        filter: hue-rotate(0deg);
+        background: linear-gradient(45deg, #001133, #003366, #001133) !important;
+      }
+      25% {
+        filter: hue-rotate(45deg);
+        background: linear-gradient(45deg, #003366, #006699, #003366) !important;
+      }
+      50% { 
+        filter: hue-rotate(90deg);
+        background: linear-gradient(45deg, #006699, #0099cc, #006699) !important;
+      }
+      75% {
+        filter: hue-rotate(135deg);
+        background: linear-gradient(45deg, #0099cc, #00ccff, #0099cc) !important;
+      }
+      100% { 
+        filter: hue-rotate(180deg);
+        background: linear-gradient(45deg, #001133, #003366, #001133) !important;
+      }
+    }
+
+    @keyframes musicGlow {
+      0% {
+        text-shadow: 0 0 5px rgba(0, 234, 255, 0.5);
+        box-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
+      }
+      50% {
+        text-shadow: 0 0 15px rgba(0, 234, 255, 0.8);
+        box-shadow: 0 0 40px rgba(0, 234, 255, 0.6);
+      }
+      100% {
+        text-shadow: 0 0 5px rgba(0, 234, 255, 0.5);
+        box-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
+      }
+    }
+
+    @keyframes musicBeat {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    body.fade-to-black {
+      background: linear-gradient(45deg, #001133, #003366, #001133) !important;
+      background-size: 200% 200% !important;
+      animation: 
+        musicPulse 3s ease-in-out infinite,
+        musicColorShift 10s linear infinite !important;
+    }
+
+    body.fade-to-black::before {
+      animation: musicGlow 2s ease-in-out infinite !important;
+    }
+
+    body.fade-to-black .hCon#border,
+    body.fade-to-black .anchor,
+    body.fade-to-black #audioPlayer,
+    body.fade-to-black #textBox {
+      animation: musicGlow 3s ease-in-out infinite !important;
+    }
+
+    body.fade-to-black .gallery-slide.active img {
+      animation: musicBeat 0.5s ease-in-out infinite !important;
+    }
+
+    body.fade-to-black .lyrics-line.active {
+      animation: musicGlow 1.5s ease-in-out infinite !important;
+    }
+
+    body.fade-to-black::after {
+      opacity: 0.3;
+      animation: scrollBackground 30s linear infinite !important;
+    }
 
     /* SIMPLIFIED GEOMETRIC OVERLAY (just the background gradient) */
     .geometric-overlay {
@@ -185,11 +258,16 @@ body.fade-to-black {
       height: 100%;
       z-index: -1;
       pointer-events: none;
-      background-image: url('data:image/svg+xml;charset=utf8,%3Csvg%20width%3D%22640%22%20height%3D%22480%22%20viewBox%3D%220%200%20640%20480%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%20%3Cstyle%20type%3D%22text%2Fcss%22%3E%20rect%20%7B%20opacity%3A%200.5%3B%20%7D%20%3C%2Fstyle%3E%20%3Cg%20id%3D%22bg%22%3E%20%3ClinearGradient%20id%3D%22bggrad%22%20gradientUnits%3D%22userSpaceOnUse%22%20x1%3D%220%22%20y1%3D%22239.5937%22%20x2%3D%22640%22%20y2%3D%22239.5937%22%20gradientTransform%3D%22matrix%281%200%200%20-1%200%20479.5%29%22%3E%20%3Cstop%20offset%3D%220%22%20style%3D%22stop-color%3Atransparent%22%2F%3E%20%3Cstop%20offset%3D%220.3743%22%20style%3D%22stop-color%3Argba(33,33,33,0.502)%22%2F%3E%20%3Cstop%20offset%3D%220.7682%22%20style%3D%22stop-color%3Atransparent%22%2F%3E%20%3Cstop%20offset%3D%221%22%20style%3D%22stop-color%3Argba(33,33,33,0.502)%22%2F%3E%20%3C%2FlinearGradient%3E%20%3Crect%20style%3D%22fill%3Aurl%28%23bggrad%29%3B%22%20width%3D%22640%22%20height%3D%22479.8%22%20%2F%3E%20%3C%2Fg%3E%3C%2Fsvg%3E');
+      background-image: url('data:image/svg+xml;charset=utf8,%3Csvg%20width%3D%22640%22%20height%3D%22480%22%20viewBox%3D%220%200%20640%20480%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%20%3Cstyle%20type%3D%22text%2Fcss%22%3E%20rect%20%7B%20opacity%3A%200.5%3B%20%7D%20%3C%2Fstyle%3E%20%3Cg%20id%3D%22bg%22%3E%20%3ClinearGradient%20id%3D%22bggrad%22%20gradientUnits%3D%22userSpaceOnUse%22%20x1%3D%220%22%20y1%3D%22239.5937%22%20x2%3D%22640%22%20y2%3D%22239.5937%22%20gradientTransform%3D%22matrix%281%200%200%20-1%200%20479.5%29%22%3E%20%3Cstop%20offset%3D%220%22%20style%3D%22stop-color%3Atransparent%22%2F%3E%20%3Cstop%20offset%3D%220.3743%22%20style%3D%22stop-color%3Argba(33,33,33,0.502)%22%2F%3E%20%3Cstop%20offset%3D%220.7682%22%20style%3D%22stop-color%3Atransparent%22%2F%3E%20%3Cstop%20offset%3D%221%22%20style%3D%22stop-color%3Argba(33,33,33,0.502)%22%2F%3E%20%3C%2FlinearGradient%3E%20%3Crect%20style%3D%22fill%3Aurl%28%23bggrad%29%3B%22%20width%3D%22640%22% height%3D%22479.8%22%20%2F%3E%20%3C%2Fg%3E%3C%2Fsvg%3E');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
       opacity: 0.3;
+    }
+
+    body.fade-to-black .geometric-overlay {
+      opacity: 0.5;
+      animation: musicColorShift 15s linear infinite !important;
     }
 
     html, body {
