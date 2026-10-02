@@ -8,6 +8,16 @@
     * {
       margin: 0;
       padding: 0;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Happey · Refurbishing</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
       box-sizing: border-box;
     }
 
@@ -69,27 +79,18 @@
       max-width: 700px;
       width: 100%;
       padding: 3.5rem 2.5rem;
-      background: rgba(0, 20, 40, 0.75);
-      backdrop-filter: blur(12px);
-      border: 3px solid #00eaff;
-      border-radius: 32px;
-      box-shadow: 0 0 40px rgba(0, 234, 255, 0.6), 0 0 15px rgba(0, 234, 255, 0.4) inset;
       text-align: center;
-      animation: fadeInGlow 1.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-      transform-origin: center;
-      transition: box-shadow 0.3s ease;
+      animation: fadeIn 1.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
     }
 
-    @keyframes fadeInGlow {
+    @keyframes fadeIn {
       0% {
         opacity: 0;
         transform: scale(0.92) translateY(8px);
-        box-shadow: 0 0 5px #00eaff88;
       }
       100% {
         opacity: 1;
         transform: scale(1) translateY(0);
-        box-shadow: 0 0 45px #00eaff, 0 0 20px #00eaff66;
       }
     }
 
@@ -99,16 +100,9 @@
       font-weight: normal;
       letter-spacing: 2px;
       color: #00eaff;
-      text-shadow: 0 0 10px #00eaff, 0 0 25px #00aaff, 0 0 45px #0055aa;
       margin-bottom: 0.75rem;
       line-height: 1.2;
       word-break: break-word;
-      animation: textPulse 2.5s infinite alternate;
-    }
-
-    @keyframes textPulse {
-      0% { text-shadow: 0 0 8px #00eaff, 0 0 18px #0099ff, 0 0 28px #0066cc; }
-      100% { text-shadow: 0 0 18px #00eaff, 0 0 35px #00c3ff, 0 0 55px #0088ff; }
     }
 
     .refurb-card .sub-line {
@@ -118,50 +112,6 @@
       letter-spacing: 2px;
       margin-top: 1.2rem;
       opacity: 0.9;
-      text-shadow: 0 0 8px #00eaff88;
-    }
-
-    .refurb-card .glitch-dots {
-      display: flex;
-      justify-content: center;
-      gap: 18px;
-      margin-top: 2.2rem;
-    }
-
-    .glitch-dots span {
-      width: 14px;
-      height: 14px;
-      background: #00eaff;
-      border-radius: 50%;
-      box-shadow: 0 0 18px #00eaff;
-      animation: dotBounce 1.4s infinite ease-in-out both;
-    }
-
-    .glitch-dots span:nth-child(1) { animation-delay: -0.32s; }
-    .glitch-dots span:nth-child(2) { animation-delay: -0.16s; }
-    .glitch-dots span:nth-child(3) { animation-delay: 0s; }
-    .glitch-dots span:nth-child(4) { animation-delay: 0.16s; }
-    .glitch-dots span:nth-child(5) { animation-delay: 0.32s; }
-
-    @keyframes dotBounce {
-      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-      40% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 25px #00eaff; }
-    }
-
-    .tiny-note {
-      position: fixed;
-      bottom: 12px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      font-family: 'Deltarune', 'Ubuntu', Verdana, sans-serif;
-      font-size: 0.9rem;
-      color: #00eaff66;
-      letter-spacing: 3px;
-      z-index: 20;
-      pointer-events: none;
-      text-transform: uppercase;
-      text-shadow: 0 0 6px #00eaff44;
     }
 
     html, body {
@@ -190,14 +140,6 @@
   <div class="refurb-card">
     <h1>hello im currently refurbishing</h1>
     <div class="sub-line">this about me page</div>
-    <div class="glitch-dots">
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-      <span></span>
-    </div>
   </div>
-  <div class="tiny-note">✦ Happey ✦</div>
 </body>
 </html>
