@@ -1,1 +1,1989 @@
-im refurbishing this about me rn so sorry
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0078D7">
+<link rel="icon" type="image/png" href="fav-icon.png">
+<title>HappeyOS</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="boot"><div id="bootlog"></div></div>
+
+<div id="loading">
+  <img src="fav-icon.png" alt="HappeyOS">
+  <div class="lname">HappeyOS</div>
+  <div class="progress-container"><div id="progressBar"></div></div>
+  <div id="loadedMsg">Loaded!</div>
+</div>
+
+<div id="mobile">
+  <div id="mwall"></div>
+  <div id="mgrid"></div>
+  <div id="msheet"><div id="msheetbar"><button id="mback">&#8249;</button><span id="msheettitle"></span></div><div id="msheetbody"></div></div>
+</div>
+<div id="guide">
+  <div id="guideann"></div>
+  <div id="guidebox"><img id="guideport" src="assets/images/guy.gif" alt=""><div id="guidetextwrap"><div id="guidetext"></div><div id="guidehint">▼</div></div></div>
+</div>
+<div id="tutask">
+  <div id="tutbox">
+    <p>Would you like a tutorial?</p>
+    <div><button id="tutYes">Yes</button><button id="tutNo">No</button></div>
+  </div>
+</div>
+
+<div id="desktop">
+  <div id="wallbg"></div>
+  <div id="icons"></div>
+  <div id="winlayer"></div>
+  <div id="startback">
+  <div id="startmenu">
+    <div class="sm-left">
+      <div id="smApps"></div>
+    </div>
+    <div class="sm-right"><div class="sm-tiles" id="smTiles"></div></div>
+  </div>
+  </div>
+  <div id="taskbar">
+    <button id="startBtn"><img src="assets/images/guy.gif" alt="Start" draggable="false" style="width:26px;height:26px;pointer-events:none;"></button>
+    <span id="tasks"></span>
+  </div>
+  <div id="shut">
+    <div class="spin">&#9881;</div>
+    <div id="shut-msg">Shutting down</div>
+    <button id="shut-btn">reboot</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s);
+const bootEl = $('#boot'), bootlog = $('#bootlog');
+const loading = $('#loading'), pbar = $('#progressBar'), desktop = $('#desktop');
+const bootTime = Date.now();
+let skipped = false, booted = false, shutShown = false, bootErrors = [];
+
+
+function uptimeStr(){
+  const s = Math.floor((Date.now() - bootTime) / 1000);
+  const m = Math.floor(s / 60), h = Math.floor(m / 60);
+  if (h > 0) return h + 'h ' + (m % 60) + 'm';
+  if (m > 0) return m + 'm ' + (s % 60) + 's';
+  return s + 's';
+}
+function artHTML(){
+  const G = '<span style="color:#AAAAAA">';
+  const W = '<span style="color:#FFFFFF">';
+  const WG = '<span style="color:#FFFFFF;background-color:#AAAAAA">';
+  const B = '<span style="color:#5555FF">';
+  const C = '</span>';
+  return '<pre>'
+  + G + '   ▄█       ' + C + G + ' ▄███       ' + C + '\n'
+  + G + '▀' + C + WG + '░░▒░' + C + G + '       ' + C + '\n'
+  + G + ' ' + C + WG + '▒▒▒▒' + C + G + '▄' + C + WG + '▒▒▒' + C + G + '▄  ' + C + '\n'
+  + G + ' ' + C + WG + '▓▓▓▓▓▓▓▓▓▓' + C + G + ' ' + C + '\n'
+  + G + ' ' + C + W + '█████' + C + G + ' ' + C + W + '████▌' + C + '\n'
+  + G + ' ' + C + B + '░░░░▌' + C + G + ' ' + C + B + '▐░░░▌' + C + '\n'
+  + B + '▀▒▒▒▒▀' + C + G + ' ' + C + B + '▒▒▒▒▌' + C + '\n'
+  + G + '  ' + C + B + '▀▀' + C + G + '  ' + C + B + '▐▓▓▓▓' + C + G + ' ' + C + '\n'
+  + G + '     ' + C + B + '▄███▀' + C + G + '  ' + C + '\n'
+  + G + '   ' + C + B + '▄█▀▀' + C + G + '     ' + C + '</pre>';
+}
+
+function blog(html){
+  const d = document.createElement('div');
+  d.innerHTML = html;
+  bootlog.appendChild(d);
+  bootEl.scrollTop = bootEl.scrollHeight;
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+window.addEventListener('error', e => {
+  if (!booted && bootlog){
+    const d = document.createElement('div');
+    d.style.color = '#ff5555';
+    d.textContent = 'boot error: ' + (e.message || e.error);
+    bootlog.appendChild(d);
+  }
+});
+function probeAudio(src, ms){
+  return new Promise(res => {
+    let done = false;
+    const fin = ok => { if (!done){ done = true; res(ok); } };
+    try {
+      const a = new Audio();
+      const to = setTimeout(() => fin(false), ms || 2500);
+      a.addEventListener('canplaythrough', () => { clearTimeout(to); fin(true); }, { once: true });
+      a.addEventListener('error', () => { clearTimeout(to); fin(false); }, { once: true });
+      a.preload = 'auto';
+      a.src = src;
+    } catch(e){ fin(false); }
+  });
+}
+function probeImage(src, ms){
+  return new Promise(res => {
+    let done = false;
+    const fin = ok => { if (!done){ done = true; res(ok); } };
+    try {
+      const im = new Image();
+      const to = setTimeout(() => fin(false), ms || 2500);
+      im.onload = () => { clearTimeout(to); fin(true); };
+      im.onerror = () => { clearTimeout(to); fin(false); };
+      im.src = src;
+    } catch(e){ fin(false); }
+  });
+}
+async function probeFont(){
+  try {
+    if (!document.fonts || !document.fonts.load) return 'skip';
+    await Promise.race([document.fonts.load('16px "Deltarune"'), sleep(4000)]);
+    return document.fonts.check('16px "Deltarune"');
+  } catch(e){ return false; }
+}
+function probeStorage(){
+  try {
+    localStorage.setItem('__happey_probe__', '1');
+    const ok = localStorage.getItem('__happey_probe__') === '1';
+    localStorage.removeItem('__happey_probe__');
+    return ok;
+  } catch(e){ return false; }
+}
+async function runChecks(){
+  const fails = [];
+  const ck = async (label, p) => {
+    let r = false;
+    try { r = await p; } catch(e){ r = false; }
+    if (r !== 'skip' && !r) fails.push(label);
+    bumpProg();
+    return r;
+  };
+  const jobs = [ck('localStorage', Promise.resolve(probeStorage())), ck('font deltarune.ttf', probeFont())];
+  Object.keys(SFX).forEach(k => jobs.push(ck('sound ' + SFX[k], probeAudio(SFX[k]))));
+  ['profile.png', 'happeycupcake.png', 'unorender.png', 'allblackfits.png', 'hi.jpg', 'guy.gif'].forEach(n => jobs.push(ck('image ' + n, probeImage(imgSrc(n)))));
+  jobs.push(ck('icon fav-icon.png', probeImage('fav-icon.png')));
+  await Promise.all(jobs);
+  return fails;
+}
+let checksPromise = null, desktopShown = false;
+async function doBoot(){
+  bootTotal = Object.keys(SFX).length + 10;
+  bootDone = 0; loadedShown = false;
+  try { applyWall(); } catch(e){}
+  try { manifestPromise = loadManifest().then(m => { manifestResult = m; bumpProg(); }).catch(() => { bumpProg(); }); } catch(e){}
+  try { checksPromise = runChecks().then(b => { bootErrors = b; }).catch(() => null); } catch(e){}
+  try { loadCharacters().catch(() => null); } catch(e){}
+  try { loadGuide().catch(() => null); } catch(e){}
+  await sleep(500);
+  if (skipped) return finishBoot();
+  finishBoot();
+}
+const FADE_MS = 2500;
+let bootDone = 0, bootTotal = 1, loadedShown = false;
+function bumpProg(){
+  bootDone++;
+  pbar.style.width = Math.min(100, bootDone / bootTotal * 100) + '%';
+  maybeLoaded();
+}
+function maybeLoaded(){
+  if (loadedShown || !booted || bootDone < bootTotal) return;
+  loadedShown = true;
+  loadedSequence();
+}
+function loadedSequence(){
+  document.getElementById('loadedMsg').classList.add('show');
+  playStartup();
+  setTimeout(() => showDesktop(), 2300);
+}
+function finishBoot(){
+  if (booted) return;
+  booted = true;
+  bootEl.style.display = 'none';
+  loading.classList.add('show');
+  void loading.offsetWidth;
+  loading.classList.add('in');
+  maybeLoaded();
+  setTimeout(() => { if (!desktopShown) showDesktop(); }, 15000);
+}
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && !desktopShown) { skipped = true; if (!booted) finishBoot(); else showDesktop(); }
+});
+
+
+const SFX = {
+  click: 'assets/sounds/click.ogg',
+  close: 'assets/sounds/close.ogg',
+  del: 'assets/sounds/delete.ogg',
+  delperm: 'assets/sounds/deleteperm.ogg',
+  hover: 'assets/sounds/hover.ogg',
+  in: 'assets/sounds/in.ogg',
+  max: 'assets/sounds/minimizeandfullscreen.ogg',
+  sending: 'assets/sounds/sending.mp3',
+  startup: 'assets/sounds/startup.mp3',
+  success: 'assets/sounds/success.ogg',
+  text: 'assets/sounds/text.wav'
+};
+let muted = false;
+const sfxCache = {}, sfxActive = {};
+const SFX_OVERLAP = { hover: true };
+function sfx(n, vol){
+  if (muted) return;
+  try {
+    let a;
+    if (SFX_OVERLAP[n]){
+      if ((sfxActive[n] || 0) >= 4) return;
+      sfxActive[n] = (sfxActive[n] || 0) + 1;
+      a = new Audio(SFX[n]);
+      a.onended = () => { sfxActive[n] = Math.max((sfxActive[n] || 1) - 1, 0); };
+    } else {
+      a = sfxCache[n];
+      if (!a){ a = new Audio(SFX[n]); sfxCache[n] = a; }
+      try { a.currentTime = 0; } catch(e){}
+    }
+    a.volume = (vol === undefined ? 0.45 : vol) * (SET.vol === undefined ? 1 : SET.vol / 100);
+    const p = a.play();
+    if (p && p.catch) p.catch(() => { sfxActive[n] = Math.max((sfxActive[n] || 1) - 1, 0); });
+  } catch(e){}
+}
+let startupPlayed = false;
+function playStartup(){
+  if (startupPlayed || IS_MOBILE) return;
+  if (muted){ startupPlayed = true; return; }
+  try {
+    let a = sfxCache.startup;
+    if (!a){ a = new Audio(SFX.startup); sfxCache.startup = a; }
+    a.volume = 0.55 * (SET.vol === undefined ? 1 : SET.vol / 100);
+    const p = a.play();
+    if (p && p.then) p.then(() => { startupPlayed = true; }).catch(() => {});
+    else startupPlayed = true;
+  } catch(e){}
+}
+function imgSrc(nm){ return 'assets/images/' + nm; }
+function mp3Src(nm){ return 'assets/music/' + encodeURIComponent(nm || ''); }
+
+
+let manifestPromise = null, manifestResult = null, DOC_FILES = null;
+function loadManifest(){
+  const names = a => (Array.isArray(a) ? a : []).filter(e => e && e.type === 'file').map(e => e.name);
+  return (async () => {
+    try {
+      const repo = 'https://api.github.com/repos/TotallyNotHappey/abouthappey/contents/';
+      const res = await Promise.all([
+        fetch(repo + 'assets/images').then(r => r.ok ? r.json() : []),
+        fetch(repo + 'assets/music').then(r => r.ok ? r.json() : []),
+        fetch(repo + 'assets/sounds').then(r => r.ok ? r.json() : []),
+        fetch(repo + 'assets/images/documents').then(r => r.ok ? r.json() : [])
+      ]);
+      const m = { images: names(res[0]), music: names(res[1]), sounds: names(res[2]),
+        documents: names(res[3]).map(n => 'documents/' + n) };
+      if (m.images.length || m.music.length || m.sounds.length || m.documents.length) return m;
+    } catch(e){}
+    try {
+      const r = await fetch('manifest.json');
+      if (r.ok){
+        const j = await r.json();
+        if (j && (j.images || j.music || j.sounds || j.documents)) return j;
+      }
+    } catch(e){}
+    return null;
+  })();
+}
+function applyManifest(m){
+  if (!m) return;
+  if (m.documents) DOC_FILES = m.documents.filter(n => /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(n));
+  const isImg = n => /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(n);
+  const isAud = n => /\.(mp3|wav|ogg)$/i.test(n);
+  const gal = nodeAt(['Home', 'Images']);
+  if (gal && m.images){
+    const listed = {};
+    m.images.filter(isImg).forEach(nm => { listed[nm] = true; });
+    Object.keys(gal.children).forEach(k => { if (gal.children[k].t === 'img' && !listed[k]) delete gal.children[k]; });
+    Object.keys(listed).forEach(nm => { if (!gal.children[nm]) gal.children[nm] = { t: 'img' }; });
+  }
+  const mus = nodeAt(['Home', 'Music']);
+  if (mus && m.music){
+    const listed = {};
+    m.music.filter(isAud).forEach(nm => { listed[nm] = true; });
+    Object.keys(mus.children).forEach(k => { if (mus.children[k].t === 'mp3' && !listed[k]) delete mus.children[k]; });
+    Object.keys(listed).forEach(nm => { if (!mus.children[nm]) mus.children[nm] = { t: 'mp3', m: Date.now() }; });
+  }
+  fsSave();
+}
+
+
+
+const SUPA_URL = 'https://shdeksoyctpbudvsbffx.supabase.co';
+const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoZGVrc295Y3RwYnVkdnNiZmZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMDcwMDgsImV4cCI6MjEwNjc4MzAwOH0.oWsMIr31VK2NAn56UKUnWE35ncgtAGl74XRPNOjXhFQ';
+const MSG_MAX = 5000, MSG_COOLDOWN = 30000;
+async function sendHappeyMsg(text){
+  text = (text || '').trim();
+  if (!text) return { ok: false, info: 'Write something first.' };
+  if (text.length > MSG_MAX) return { ok: false, info: 'Too long (max ' + MSG_MAX + ' chars).' };
+  let last = 0;
+  try { last = parseInt(localStorage.getItem('happeyos_msgcd') || '0', 10) || 0; } catch(e){}
+  const wait = Math.ceil((MSG_COOLDOWN - (Date.now() - last)) / 1000);
+  if (wait > 0) return { ok: false, info: 'Slow down — try again in ' + wait + 's.' };
+  try {
+    const r = await fetch(SUPA_URL + '/rest/v1/messages', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_ANON,
+        'Authorization': 'Bearer ' + SUPA_ANON,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ text: text })
+    });
+    if (!r.ok) return { ok: false, info: 'Send failed (error ' + r.status + ').' };
+    try { localStorage.setItem('happeyos_msgcd', String(Date.now())); } catch(e){}
+    return { ok: true, info: 'Sent!' };
+  } catch(e){
+    return { ok: false, info: 'Network error — are you online?' };
+  }
+}
+function playFile(name, maxMs){
+  return new Promise(res => {
+    let done = false;
+    const fin = () => { if (!done){ done = true; res(); } };
+    if (muted || !SFX[name]){ fin(); return; }
+    try {
+      const a = new Audio(SFX[name]);
+      a.volume = 0.45 * (SET.vol === undefined ? 1 : SET.vol / 100);
+      const to = setTimeout(() => { try { a.pause(); } catch(e){} fin(); }, maxMs || 3000);
+      a.onended = () => { clearTimeout(to); fin(); };
+      a.onerror = () => { clearTimeout(to); fin(); };
+      const p = a.play();
+      if (p && p.catch) p.catch(() => { clearTimeout(to); fin(); });
+    } catch(e){ fin(); }
+  });
+}
+function validateMsg(text){
+  text = (text || '').trim();
+  if (!text) return 'Write something first.';
+  if (text.length > MSG_MAX) return 'Too long (max ' + MSG_MAX + ' chars).';
+  let last = 0;
+  try { last = parseInt(localStorage.getItem('happeyos_msgcd') || '0', 10) || 0; } catch(e){}
+  const wait = Math.ceil((MSG_COOLDOWN - (Date.now() - last)) / 1000);
+  if (wait > 0) return 'Slow down — try again in ' + wait + 's.';
+  return null;
+}
+function mountMessages(w){
+  const b = w.body;
+  b.innerHTML = '<div class="pad"><b>Send me a message</b>'
+    + '<textarea id="msgBox" maxlength="5000" rows="6" style="width:100%;resize:vertical;font-family:inherit;font-size:12px;padding:8px;border:1px solid #767676;outline:none;box-sizing:border-box;margin-top:8px;"></textarea>'
+    + '<div style="display:flex;align-items:center;gap:10px;margin-top:8px;">'
+    + '<button id="msgSend" style="background:#0078D7;color:#fff;border:none;padding:8px 22px;font-size:12px;cursor:pointer;font-family:inherit;">Send</button>'
+    + '<span id="msgCount" style="color:#777;font-size:11px;">0 / 5000</span></div>'
+    + '<div id="msgStatus" style="margin-top:10px;font-size:12px;color:#333;min-height:16px;"></div></div>';
+  const box = b.querySelector('#msgBox'), btn = b.querySelector('#msgSend'),
+        status = b.querySelector('#msgStatus'), count = b.querySelector('#msgCount');
+  box.addEventListener('input', () => { count.textContent = box.value.length + ' / 5000'; });
+  let sending = false;
+  const send = async () => {
+    if (sending) return;
+    const err = validateMsg(box.value);
+    if (err){ status.style.color = '#c00000'; status.textContent = err; return; }
+    sending = true;
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    status.style.color = '#333'; status.textContent = '';
+    const req = sendHappeyMsg(box.value);
+    await playFile('sending', 20000);
+    const r = await req;
+    status.style.color = r.ok ? '#000' : '#c00000';
+    status.textContent = r.info;
+    if (r.ok){ box.value = ''; count.textContent = '0 / 5000'; await playFile('success'); }
+    btn.textContent = 'Send'; btn.disabled = false; sending = false;
+  };
+  btn.addEventListener('click', send);
+}
+
+const APPS = {
+  konsole:  { name: 'Terminal', icon: 'assets/icons/terminal.svg' },
+  dolphin:  { name: 'Files',    icon: 'assets/icons/files.svg' },
+  about:    { name: 'Guide', icon: 'assets/icons/help.svg' },
+  falkon:   { name: 'Browser',  icon: 'assets/icons/browser.svg' },
+  elisa:    { name: 'Music',    icon: 'assets/icons/music.svg' },
+  settings: { name: 'Settings', icon: 'assets/icons/settings.svg' },
+  viewer: { name: 'Photos', icon: 'assets/icons/photos.svg', size: [720, 520] },
+  messages: { name: 'Messages', icon: 'assets/icons/messages.svg' },
+  paint: { name: 'Paint', icon: 'assets/icons/krita.svg', size: [780, 580] },
+  docs: { name: 'Documentation', icon: 'assets/icons/text.svg' }
+};
+let wins = [], zTop = 10, activeSeq = -1;
+
+
+const FS_KEY = 'happeyos_fs_v1';
+const SET_KEY = 'happeyos_set_v1';
+function seedFS(){
+  const now = Date.now();
+  return { children: {
+    'Home': { t: 'dir', children: {
+      'Desktop': { t: 'dir', sys: true, children: {} },
+      'Images': { t: 'dir', ro: true, children: {
+        'profile.png': { t: 'img' }, 'happeycupcake.png': { t: 'img' }, 'unorender.png': { t: 'img' },
+        'allblackfits.png': { t: 'img' }, 'hi.jpg': { t: 'img' }, 'guy.gif': { t: 'img' }
+      }},
+      'Music': { t: 'dir', children: { 'FIND YOUR FLAME.mp3': { t: 'mp3' } } }
+    }}
+  }};
+}
+let FS = null;
+try { FS = JSON.parse(localStorage.getItem(FS_KEY)) || seedFS(); }
+catch(e){ FS = seedFS(); }
+if (!FS.children || !FS.children.Home) FS = seedFS();
+if (FS.children && (FS.children.Gallery || FS.children.Music)){
+  const home = FS.children.Home;
+  if (FS.children.Gallery){ home.children.Images = FS.children.Gallery; delete FS.children.Gallery; }
+  if (FS.children.Music){ home.children.Music = FS.children.Music; delete FS.children.Music; }
+  fsSave();
+}
+try {
+  const home = FS.children && FS.children.Home;
+  if (home && home.children){ delete home.children['about.txt']; delete home.children['contact.txt']; }
+  fsSave();
+} catch(e){}
+function fsSave(){ try { localStorage.setItem(FS_KEY, JSON.stringify(FS)); } catch(e){} }
+let SET = { iconSize: 'm', showIcons: true, sortBy: 'none' };
+try { SET = Object.assign(SET, JSON.parse(localStorage.getItem(SET_KEY) || '{}')); } catch(e){}
+muted = !!SET.muted;
+function setSave(){ try { localStorage.setItem(SET_KEY, JSON.stringify(SET)); } catch(e){} }
+let CLIP = null; // { mode:'cut'|'copy', from:[path], name }
+function nodeAt(path){
+  let n = FS;
+  for (const p of path){
+    if (!n.children || !n.children[p]) return null;
+    n = n.children[p];
+  }
+  return n;
+}
+function resolveDir(base, input){
+  let parts = (input || '').trim().replace(/\\/g, '/');
+  if (!parts) return null;
+  if (parts === '~') return ['Home'];
+  let out;
+  if (parts[0] === '/'){ out = []; parts = parts.slice(1); }
+  else if (/^~\//.test(parts)){ out = ['Home']; parts = parts.slice(2); }
+  else if (/^home(\/|$)/i.test(parts)){ out = []; }
+  else out = base.slice();
+  for (const seg of parts.split('/')){
+    if (!seg || seg === '.') continue;
+    if (seg === '..'){ if (out.length) out.pop(); continue; }
+    const node = nodeAt(out);
+    if (!node || !node.children) return null;
+    const hit = Object.keys(node.children).find(k => k.toLowerCase() === seg.toLowerCase() && node.children[k].t === 'dir');
+    if (!hit) return null;
+    out.push(hit);
+  }
+  return out;
+}
+function resolveFile(base, input){
+  const parts = (input || '').trim().replace(/\\/g, '/');
+  if (!parts) return null;
+  const i = parts.lastIndexOf('/');
+  const dir = i === -1 ? base.slice() : resolveDir(base, parts.slice(0, i));
+  const name = i === -1 ? parts : parts.slice(i + 1);
+  if (!dir || !name) return null;
+  const node = nodeAt(dir);
+  if (!node || !node.children) return null;
+  const hit = Object.keys(node.children).find(k => k.toLowerCase() === name.toLowerCase());
+  return hit ? node.children[hit] : null;
+}
+function uniqueName(dir, base){
+  if (!dir.children[base]) return base;
+  const dot = base.lastIndexOf('.');
+  const stem = dot > 0 ? base.slice(0, dot) : base;
+  const ext = dot > 0 ? base.slice(dot) : '';
+  let i = 2;
+  while (dir.children[stem + ' (' + i + ')' + ext]) i++;
+  return stem + ' (' + i + ')' + ext;
+}
+const FICONS = { dir: 'assets/icons/folder.svg', txt: 'assets/icons/text.svg', img: 'assets/icons/image.svg', mp3: 'assets/icons/audio.svg' };
+function iconImg(src){ return '<img class="ai" src="' + src + '" alt="" draggable="false">'; }
+function appIcon(id){ return iconImg(APPS[id].icon); }
+function glyph(n){ return iconImg(FICONS[n.t] || FICONS.txt); }
+function fsFind(name){
+  const low = name.toLowerCase();
+  const h = nodeAt(['Home']);
+  const scopes = [h, h && h.children['Desktop'], h && h.children['Images'], h && h.children['Music']];
+  for (const s of scopes){
+    if (!s || !s.children) continue;
+    for (const k of Object.keys(s.children)){
+      if (k.toLowerCase() === low) return s.children[k];
+    }
+  }
+  return null;
+}
+function doPaste(destPath){
+  if (!CLIP) return false;
+  const dest = nodeAt(destPath);
+  if (!dest || dest.ro) return false;
+  const src = nodeAt(CLIP.from);
+  const entry = src && src.children && src.children[CLIP.name];
+  if (!entry) return false;
+  if (entry.sys) return false;
+  if (CLIP.mode === 'cut'){
+    if (CLIP.from.join('/') === destPath.join('/')) return false;
+    delete src.children[CLIP.name];
+    entry.m = Date.now();
+    dest.children[uniqueName(dest, CLIP.name)] = entry;
+    CLIP = null;
+  } else {
+    dest.children[uniqueName(dest, CLIP.name)] = JSON.parse(JSON.stringify(entry));
+  }
+  fsSave();
+  return true;
+}
+function refreshFilesWindows(){
+  wins.forEach(w => { if (!w.closed && w.id === 'dolphin' && w.refresh) w.refresh(); });
+}
+
+async function showDesktop(){
+  if (desktopShown) return;
+  desktopShown = true;
+  if (SET.showIcons === false){ SET.showIcons = true; setSave(); }
+  applyWall();
+  try { await Promise.race([manifestPromise, sleep(4000)]); } catch(e){}
+  try { applyManifest(manifestResult); } catch(e){}
+  try { await Promise.race([checksPromise, sleep(9000)]); } catch(e){}
+  if (!Array.isArray(bootErrors)) bootErrors = [];
+  try { await Promise.race([preloadWall(), sleep(6000)]); } catch(e){}
+  loading.classList.remove('in');
+  loading.classList.add('out');
+  playStartup();
+  setTimeout(() => { loading.classList.remove('show'); loading.classList.remove('out'); }, FADE_MS + 100);
+  if (IS_MOBILE){ showMobile(); return; }
+  desktop.style.display = 'block';
+  void desktop.offsetWidth;
+  desktop.classList.add('show');
+  buildIcons(); buildStartmenu(); buildTaskbar();
+  if (bootErrors.length) setTimeout(() => openApp('konsole', { errors: bootErrors.slice(), max: true }), 900);
+  else if (!SET.guideSeen) setTimeout(() => askTutorial(), FADE_MS + 1600);
+}
+const FORCE_MODE = (location.search.match(/[?&]mode=(mobile|desktop)/) || [])[1] || '';
+const IS_MOBILE = FORCE_MODE ? FORCE_MODE === 'mobile' : (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '') || (navigator.maxTouchPoints > 0 && Math.min(screen.width, screen.height) < 768));
+function showMobile(){
+  document.getElementById('mobile').style.display = 'block';
+  applyWall();
+  const grid = $('#mgrid');
+  grid.innerHTML = '';
+  Object.keys(APPS).forEach(id => {
+    const d = document.createElement('div');
+    d.className = 'mapp';
+    d.innerHTML = appIcon(id) + '<span>' + APPS[id].name + '</span>';
+    d.addEventListener('click', () => { sfx('click'); openMobileApp(id); });
+    grid.appendChild(d);
+  });
+  $('#mback').addEventListener('click', () => { $('#msheet').classList.remove('open'); $('#msheetbody').innerHTML = ''; });
+  if (bootErrors.length) setTimeout(() => openMobileApp('konsole', { errors: bootErrors.slice() }), 900);
+  else if (!SET.guideSeen) setTimeout(() => startGuide(GUIDEM.length ? GUIDEM : GUIDE), 1500);
+}
+function openWin(id, arg){ if (IS_MOBILE) openMobileApp(id, arg); else openApp(id, arg); }
+function openMobileApp(id, arg){
+  if (id === 'about'){ startGuide(); return; }
+  $('#msheettitle').textContent = (APPS[id] || {}).name || id;
+  const body = $('#msheetbody');
+  body.innerHTML = '';
+  mountBody({ id: id, body: body }, arg || {});
+  $('#msheet').classList.add('open');
+}
+function deskDir(){ return nodeAt(['Home', 'Desktop']); }
+function renderDeskIcons(){
+  const box = $('#icons');
+  box.querySelectorAll('.ufile').forEach(e => e.remove());
+  if (!SET.showIcons) return;
+  const dir = deskDir();
+  if (!dir) return;
+  let names = Object.keys(dir.children);
+  if (SET.sortBy === 'name') names.sort((a, b) => a.localeCompare(b));
+  if (SET.sortBy === 'date') names.sort((a, b) => (dir.children[b].m || 0) - (dir.children[a].m || 0));
+  names.forEach(nm => {
+    const d = document.createElement('div');
+    d.className = 'dicon ufile sz-' + SET.iconSize;
+    const g = document.createElement('div'); g.className = 'g'; g.innerHTML = glyph(dir.children[nm]);
+    const n = document.createElement('div'); n.className = 'n'; n.textContent = nm;
+    d.appendChild(g); d.appendChild(n);
+    d.addEventListener('dblclick', () => {
+      sfx('click');
+      const node = deskDir().children[nm];
+      if (node && node.t === 'img'){ openApp('viewer', { src: nm }); return; }
+      openApp('dolphin', { path: ['Home', 'Desktop'], select: nm, edit: node && node.t === 'txt' });
+    });
+    d.addEventListener('mouseenter', () => sfx('hover', 0.22));
+    box.appendChild(d);
+  });
+}
+function buildIcons(){
+  const box = $('#icons');
+  box.innerHTML = '';
+  [['dolphin','Files'],['docs','Documentation'],['about','Guide']].forEach(([id,label]) => {
+    const d = document.createElement('div');
+    d.className = 'dicon sz-' + SET.iconSize;
+    d.innerHTML = '<div class="g">' + appIcon(id) + '</div><div class="n">' + label + '</div>';
+    d.addEventListener('dblclick', () => { sfx('click'); openApp(id); });
+    d.addEventListener('mouseenter', () => sfx('hover', 0.22));
+    box.appendChild(d);
+  });
+  renderDeskIcons();
+}
+
+
+function buildStartmenu(){
+  const draw = () => {
+    const list = $('#smApps'), tiles = $('#smTiles');
+    list.innerHTML = ''; tiles.innerHTML = '';
+    Object.keys(APPS).forEach(id => {
+      const r = document.createElement('div');
+      r.className = 'sm-app';
+      r.innerHTML = '<span class="g">' + appIcon(id) + '</span><span>' + APPS[id].name + '</span>';
+      r.addEventListener('click', () => { sfx('click'); toggleStart(false); openApp(id); });
+      r.addEventListener('mouseenter', () => sfx('hover', 0.22));
+      list.appendChild(r);
+    });
+    const TILE_ORDER = ['docs', 'dolphin', 'konsole', 'falkon', 'elisa', 'settings', 'viewer', 'messages', 'paint'];
+    TILE_ORDER.forEach(id => {
+      if (!APPS[id]) return;
+      const t = document.createElement('div');
+      t.className = 'tile';
+      t.innerHTML = '<span class="g">' + appIcon(id) + '</span><span>' + APPS[id].name + '</span>';
+      t.addEventListener('click', () => { sfx('click'); toggleStart(false); openApp(id); });
+      t.addEventListener('mouseenter', () => sfx('hover', 0.22));
+      tiles.appendChild(t);
+    });
+  };
+  draw();
+  $('#shut-btn').addEventListener('click', () => location.reload());
+}
+function popSfx(){
+  if (muted) return;
+  try {
+    const a = new Audio(SFX.max);
+    a.volume = 0.3 * (SET.vol === undefined ? 1 : SET.vol / 100);
+    const p = a.play();
+    if (p && p.catch) p.catch(() => {});
+  } catch(e){}
+}
+function playLauncherIn(){
+  const m = $('#startmenu');
+  m.classList.remove('pop-in');
+  void m.offsetWidth;
+  m.classList.add('pop-in');
+  m.querySelectorAll('.sm-app, .tile').forEach((el, i) => {
+    const dly = 150 + i * 35 + (el.classList.contains('tile') ? 150 : 0);
+    el.classList.remove('pop-item');
+    el.style.animationDelay = dly + 'ms';
+    void el.offsetWidth;
+    el.classList.add('pop-item');
+    setTimeout(() => { if (m.classList.contains('open')) popSfx(); }, dly);
+  });
+}
+let startCloseT = null;
+function toggleStart(force){
+  const m = $('#startmenu'), b = $('#startBtn'), back = $('#startback');
+  const open = force !== undefined ? force : !m.classList.contains('open');
+  b.classList.toggle('open', open);
+  if (open){
+    clearTimeout(startCloseT);
+    m.classList.remove('closing'); back.classList.remove('closing');
+    m.classList.add('open'); back.classList.add('open');
+    sfx('in'); playLauncherIn();
+  } else {
+    if (!m.classList.contains('open')) return;
+    clearTimeout(startCloseT);
+    m.classList.add('closing'); back.classList.add('closing');
+    startCloseT = setTimeout(() => {
+      m.classList.remove('open'); back.classList.remove('open');
+      m.classList.remove('closing'); back.classList.remove('closing');
+    }, 200);
+  }
+}
+function buildTaskbar(){
+  $('#startBtn').addEventListener('click', e => { e.stopPropagation(); toggleStart(); });
+  $('#startBtn').addEventListener('mouseenter', () => sfx('hover', 0.22));
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#startmenu') && !e.target.closest('#startBtn'))
+      toggleStart(false);
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') toggleStart(false);
+  });
+}
+
+
+
+let GUIDE = [
+  '* Hi! I\'m Happey! Welcome to HappeyOS!',
+  '* This is the desktop. Double-click an icon to open it. Single clicks do nothing here, on purpose.',
+  '* That bar on the side is the taskbar. The guy up top opens the Start menu, with all the apps.',
+  '* The Terminal speaks bash. Try fastfetch inside for the sacred Potassium specs.',
+  '* Files keeps everything you make. Double-click to open things. It all saves.',
+  '* Documentation is a codex of every character. Click one. Go on.',
+  '* Got something to tell me? Messages goes straight to my inbox. Artifyber at gmail, same place.\n* Thanks for visiting!'
+];
+let GUIDEM = [];
+function guideListOf(j){
+  const pages = j && (Array.isArray(j.pages) ? j.pages : j);
+  return (Array.isArray(pages) ? pages : []).map(p => {
+    if (typeof p === 'string') return p;
+    if (p && p.text) return String(p.text);
+    return '';
+  }).filter(Boolean);
+}
+async function loadGuide(){
+  try {
+    const r = await fetch('config/guide.json');
+    if (r.ok){
+      const list = guideListOf(await r.json());
+      if (list.length) GUIDE = list;
+    }
+  } catch(e){}
+  try {
+    const r = await fetch('config/guidemobile.json');
+    if (r.ok){
+      const list = guideListOf(await r.json());
+      if (list.length) GUIDEM = list;
+    }
+  } catch(e){}
+}
+let guideIdx = 0, guideTimer = null, guideDone = false, guideOpen = false, guideIdleT = null, guideOutT = null, guidePages = null;
+function blip(){
+  if (muted) return;
+  try {
+    const a = new Audio('assets/textbox/txt.wav');
+    a.volume = 0.3 * (SET.vol === undefined ? 1 : SET.vol / 100);
+    const p = a.play();
+    if (p && p.catch) p.catch(() => {});
+  } catch(e){}
+}
+const GUIDE_AT = [
+  null,
+  null,
+  { k: 'arr', img: 'assets/icons/next.svg', r: '64px', t: '44%' },
+  { k: 'arr', img: 'assets/icons/prev.svg', l: '104px', t: '112px' },
+  { k: 'arr', img: 'assets/icons/prev.svg', l: '104px', t: '36px' },
+  { k: 'arr', img: 'assets/icons/next.svg', r: '64px', t: '6px' },
+  null
+];
+function askTutorial(){
+  if (SET.guideSeen) return;
+  document.getElementById('tutask').classList.add('open');
+}
+document.getElementById('tutYes').addEventListener('click', () => {
+  document.getElementById('tutask').classList.remove('open');
+  startGuide();
+});
+document.getElementById('tutNo').addEventListener('click', () => {
+  document.getElementById('tutask').classList.remove('open');
+  try { SET.guideSeen = true; setSave(); } catch(e){}
+});
+function startGuide(pages){
+  if (guideOpen) return;
+  guideOpen = true;
+  guideIdx = 0;
+  guidePages = (pages && pages.length) ? pages : GUIDE;
+  const g = document.getElementById('guide');
+  g.classList.add('open');
+  void g.offsetWidth;
+  g.classList.add('in');
+  clearTimeout(guideOutT);
+  g.classList.remove('out');
+  showGuidePage();
+}
+function endGuide(fade){
+  guideOpen = false;
+  clearInterval(guideTimer);
+  clearTimeout(guideIdleT);
+  clearTimeout(guideOutT);
+  try { SET.guideSeen = true; setSave(); } catch(e){}
+  const g = document.getElementById('guide');
+  g.classList.remove('in');
+  if (fade){
+    g.classList.add('out');
+    guideOutT = setTimeout(() => {
+      g.classList.remove('open');
+      g.classList.remove('out');
+    }, 400);
+  } else {
+    g.classList.remove('open');
+  }
+  document.getElementById('guideann').classList.remove('show');
+}
+function showGuidePage(){
+  const el = document.getElementById('guidetext');
+  el.textContent = '';
+  document.getElementById('guidehint').style.visibility = 'hidden';
+  const ann = document.getElementById('guideann');
+  ann.classList.remove('show', 'ring');
+  ann.innerHTML = '';
+  ann.style.cssText = '';
+  const mark = GUIDE_AT[guideIdx];
+  if (mark && !IS_MOBILE){
+    if (mark.k === 'ring') ann.classList.add('ring');
+    else {
+      const im = document.createElement('img');
+      im.src = mark.img; im.alt = '';
+      im.style.cssText = 'width:34px;height:34px;';
+      ann.appendChild(im);
+    }
+    if (mark.l) ann.style.left = mark.l;
+    if (mark.r) ann.style.right = mark.r;
+    if (mark.t) ann.style.top = mark.t;
+    if (mark.w) ann.style.width = mark.w;
+    if (mark.h) ann.style.height = mark.h;
+    ann.classList.add('show');
+  }
+  const full = guidePages[guideIdx].replace(/^\* /, '');
+  let i = 0;
+  guideDone = false;
+  clearInterval(guideTimer);
+  guideTimer = setInterval(() => {
+    if (i >= full.length){
+      clearInterval(guideTimer);
+      guideDone = true;
+      document.getElementById('guidehint').style.visibility = 'visible';
+      guideIdleT = setTimeout(() => advanceGuide(), 3500);
+      return;
+    }
+    const ch = full[i++];
+    el.textContent += ch;
+    if (!/\s/.test(ch)) blip();
+  }, 36);
+}
+function advanceGuide(){
+  if (!guideOpen) return;
+  clearTimeout(guideIdleT);
+  if (!guideDone){
+    clearInterval(guideTimer);
+    document.getElementById('guidetext').textContent = guidePages[guideIdx].replace(/^\* /, '');
+    guideDone = true;
+    document.getElementById('guidehint').style.visibility = 'visible';
+    return;
+  }
+  guideIdx++;
+  if (guideIdx >= guidePages.length) endGuide(true);
+  else { sfx('click'); showGuidePage(); }
+}
+document.getElementById('guidebox').addEventListener('click', advanceGuide);
+document.addEventListener('keydown', e => {
+  if (!guideOpen) return;
+  const tag = (e.target && e.target.tagName) || '';
+  if (e.key === 'Escape'){ endGuide(); return; }
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if (e.key === 'Enter' || e.key === ' ' || e.key === 'z' || e.key === 'Z') advanceGuide();
+});
+
+
+function openApp(id, arg){
+  if (id === 'about'){ startGuide(); return; }
+  arg = arg || {};
+  const meta = APPS[id] || {};
+  const appName = arg.title || meta.name || id;
+  const appIconPath = arg.icon || meta.icon || 'assets/icons/about.svg';
+  const appSize = arg.size || meta.size;
+  const existing = wins.find(w => w.id === id && !w.closed);
+  if (existing){ showWin(existing); focusWin(existing); return; }
+  const el = document.createElement('div');
+  el.className = 'win';
+  const n = wins.length % 5;
+  el.style.left = (60 + n * 36) + 'px';
+  el.style.top = (30 + n * 28) + 'px';
+  if (appSize){
+    const sw = Math.min(appSize[0], window.innerWidth - 20);
+    const sh = Math.min(appSize[1], window.innerHeight - 80);
+    el.style.width = sw + 'px';
+    el.style.height = sh + 'px';
+    el.style.left = Math.max((window.innerWidth - sw) / 2, 0) + 'px';
+    el.style.top = Math.max((window.innerHeight - 40 - sh) / 2, 0) + 'px';
+  }
+  el.innerHTML =
+    '<div class="titlebar"><span class="ico">' + iconImg(appIconPath) + '</span><span class="t">' + appName + '</span>'
+    + '<button class="wbtn" data-a="min">-</button>'
+    + '<button class="wbtn" data-a="max">&#9744;</button>'
+    + '<button class="wbtn close" data-a="close">\u2715</button></div>'
+    + '<div class="wbody"></div>';
+  if (arg && arg.max) el.classList.add('max');
+  $('#winlayer').appendChild(el);
+  playOpen(el);
+  const w = { id, name: appName, icon: appIconPath, el, body: el.querySelector('.wbody'), min: false, closed: false };
+  wins.push(w);
+  el.querySelectorAll('.wbtn').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const a = b.getAttribute('data-a');
+    if (a === 'close'){ sfx('close'); closeWin(w); }
+    if (a === 'min'){ sfx('max'); hideWin(w); }
+    if (a === 'max'){
+      sfx('max');
+      el.classList.toggle('max');
+      if (el.animate) el.animate(
+        [{ transform:'scale(.95)' }, { transform:'scale(1)' }],
+        { duration:200, easing:'cubic-bezier(0, 0, 0.58, 1)' }
+      );
+    }
+  }));
+  el.querySelectorAll('.wbtn').forEach(b => b.addEventListener('mouseenter', () => sfx('hover', 0.22)));
+  el.addEventListener('pointerdown', () => focusWin(w), true);
+  dragify(el, el.querySelector('.titlebar'));
+  mountBody(w, arg);
+  focusWin(w);
+  renderTasks();
+}
+function focusWin(w){
+  zTop++;
+  w.el.style.zIndex = zTop;
+  activeSeq = wins.indexOf(w);
+  wins.forEach(x => x.el.classList.toggle('inactive', x !== w));
+  renderTasks();
+}
+function playOpen(el){
+  el.classList.remove('opening');
+  void el.offsetWidth;
+  el.classList.add('opening');
+  clearTimeout(el._ot);
+  el._ot = setTimeout(() => el.classList.remove('opening'), 200);
+}
+function hideWin(w){
+  if (w.min || w.closing) return;
+  w.min = true;
+  clearTimeout(w._ht);
+  w.el.classList.add('minimizing');
+  w._ht = setTimeout(() => {
+    w.el.style.display = 'none';
+    w.el.classList.remove('minimizing');
+    renderTasks();
+  }, 150);
+  renderTasks();
+}
+function showWin(w){
+  if (!w.min || w.closing) return;
+  clearTimeout(w._ht);
+  w.min = false;
+  w.el.classList.remove('minimizing');
+  w.el.style.display = '';
+  playOpen(w.el);
+  focusWin(w);
+}
+function closeWin(w){
+  if (w.closing) return;
+  w.closing = true;
+  clearTimeout(w._ht);
+  if (w.min){
+    w.closed = true;
+    w.el.remove();
+    wins = wins.filter(x => x !== w);
+    renderTasks();
+    return;
+  }
+  w.el.classList.add('closing');
+  setTimeout(() => {
+    w.closed = true;
+    w.el.remove();
+    wins = wins.filter(x => x !== w);
+    renderTasks();
+  }, 150);
+}
+function renderTasks(){
+  const box = $('#tasks');
+  box.innerHTML = '';
+  wins.forEach(w => {
+    const b = document.createElement('button');
+    b.className = 'task' + (!w.min && wins.indexOf(w) === activeSeq ? ' active' : '');
+    b.innerHTML = '<span>' + iconImg(w.icon) + '</span>';
+    b.addEventListener('click', () => {
+      sfx('click');
+      if (w.min) showWin(w);
+      else if (wins.indexOf(w) === activeSeq) hideWin(w);
+      else focusWin(w);
+    });
+    b.addEventListener('mouseenter', () => sfx('hover', 0.22));
+    box.appendChild(b);
+  });
+}
+function dragify(el, handle){
+  let sx, sy, ox, oy, on = false;
+  handle.addEventListener('pointerdown', e => {
+    if (e.target.closest('.wbtn') || el.classList.contains('max')) return;
+    on = true; sx = e.clientX; sy = e.clientY;
+    const r = el.getBoundingClientRect(), p = el.parentElement.getBoundingClientRect();
+    ox = r.left - p.left; oy = r.top - p.top;
+    handle.setPointerCapture(e.pointerId);
+  });
+  handle.addEventListener('pointermove', e => {
+    if (!on) return;
+    el.style.left = Math.max(0, ox + e.clientX - sx) + 'px';
+    el.style.top = Math.max(0, oy + e.clientY - sy) + 'px';
+  });
+  ['pointerup','pointercancel'].forEach(ev => handle.addEventListener(ev, () => on = false));
+}
+
+
+const CARDS = [
+  { section:'Information', title:'Artifyber', sub:'artifyber@gmail.com', body:'Artifyber\nartifyber@gmail.com\n\nContact for art / business. Just a cupcake with a render farm.' },
+  { section:'Information', title:'Song Usage Policy', sub:'Rules regarding the usage of my songs', body:'Song Usage Policy\n\n1. Credit Happey / Artifyber.\n2. No re-upload as your own.\n3. Non-commercial use OK, ask first for commercial.' },
+  { section:'Deltadim', title:'Info', sub:'About Deltadim', body:'Info — About Deltadim\n\nMy little project / sona-thing. 3D, music and story bits.' },
+  { section:'Teksui', title:'Artibun', sub:'id: artibun', body:'[Teksui] Artibun\nid: artibun\n\nA bun-shaped little guy. Soft. Probably bounces.' },
+  { section:'Teksui', title:'Articat', sub:'id: articat', body:'[Teksui] Articat\nid: articat\n\nCat variant. Knows exactly what it did.' },
+  { section:'Teksui', title:'Artifish', sub:'id: artifish', body:'[Teksui] Artifish\nid: artifish\n\nFish variant. Blub.' },
+  { section:'Teksui', title:'Artifox', sub:'id: artifox', body:'[Teksui] Artifox\nid: artifox\n\nFox variant. Slightly smug, very orange.' },
+  { section:'Teksui', title:'Artigoat', sub:'id: artigoat', body:'[Teksui] Artigoat\nid: artigoat\n\nGoat variant. Will eat your homework and your flowers.' },
+  { section:'Teksui', title:'Artilope', sub:'id: artilope', body:'[Teksui] Artilope\nid: artilope\n\nAntelope variant. Fast. Distant.' },
+  { section:'Teksui', title:'Artineko', sub:'id: artineko', body:'[Teksui] Artineko\nid: artineko\n\nNeko variant. Professional napper.' },
+  { section:'Teksui', title:'Artipup', sub:'id: artipup', body:'[Teksui] Artipup\nid: artipup\n\nPup variant. Good. Very good.' },
+  { section:'Teksui', title:'Card', sub:'id: card', body:'[Teksui] Card\nid: card\n\nA card. Card-shaped. Collect them all (there is one).' }
+];
+
+function mountBody(w, arg){
+  if (w.id === 'konsole') mountKonsole(w, arg);
+  if (w.id === 'dolphin') mountDolphin(w, arg || {});
+  if (w.id === 'viewer') mountViewer(w, arg || {});
+  if (w.id === 'messages') mountMessages(w);
+  if (w.id === 'about') mountAbout(w);
+  if (w.id === 'docs') mountDocs(w);
+  if (w.id === 'falkon') mountFalkon(w);
+  if (w.id === 'elisa') mountElisa(w, arg || {});
+  if (w.id === 'settings') mountSettings(w);
+  if (w.id === 'paint') mountPaint(w);
+  if (w.id.indexOf('card:') === 0) mountCard(w, (arg && arg.card) || w.id.slice(5), CARDS);
+  if (w.id.indexOf('bio:') === 0){
+    const a = arg || {};
+    if (a.bio) mountBio(w, a.bio, a.sec || null);
+    else {
+      const rest = w.id.slice(4), ci = rest.indexOf(':');
+      mountBio(w, ci === -1 ? rest : rest.slice(ci + 1), ci === -1 ? null : rest.slice(0, ci));
+    }
+  }
+}
+
+
+function mountKonsole(w, arg){
+  arg = arg || {};
+  const b = w.body;
+  b.innerHTML = '<div class="konsole"><div class="kout"></div><div class="kline"><span class="kprompt"></span><input class="kinput" autocomplete="off" autocapitalize="off" spellcheck="false"></div></div>';
+  const out = b.querySelector('.kout');
+  const input = b.querySelector('.kinput');
+  const promptEl = b.querySelector('.kprompt');
+  let cwd = ['Home'];
+  const P = () => 'Happey@ > ';
+  promptEl.textContent = P();
+  let hist = [], hi = -1, sudo = null;
+
+  const kprint = (t, cls) => {
+    const d = document.createElement('div');
+    if (cls) d.className = cls;
+    d.textContent = t;
+    out.appendChild(d);
+    b.scrollTop = b.scrollHeight;
+  };
+  const khtml = html => {
+    const d = document.createElement('div');
+    d.innerHTML = html;
+    out.appendChild(d);
+    b.scrollTop = b.scrollHeight;
+  };
+  const echo = raw => {
+    const d = document.createElement('div');
+    d.textContent = (sudo ? '[sudo] password for happey: ' : P()) + raw;
+    out.appendChild(d);
+  };
+  if (arg.errors && arg.errors.length){
+    kprint('Boot diagnostics reported ' + arg.errors.length + ' failure(s):', 'kred');
+    arg.errors.forEach(f => kprint('  FAIL: ' + f, 'kred'));
+    kprint('The OS booted anyway — some things may be broken.', 'kdim');
+  }
+  const help = () => {
+    kprint('Available commands:');
+    ['help','fastfetch','js <code>','clear','kill','sudo <cmd>',
+     'msg <text>',
+     'ls [path]','cat <path>','cd <dir>','echo <text>'
+    ].forEach(c => kprint('  ' + c));
+  };
+  const ff = () => {
+    khtml('<div class="fetch-row" style="display:flex;gap:28px;flex-wrap:wrap;margin:10px 0;"><div class="fetch-art">' + artHTML() + '</div><div class="fetch-info">'
+    + '<div><span class="kcyan">happey@potassium</span></div>'
+    + '<div style="color:#767676">-------------------------</div>'
+    + '<div><span class="kcyan">OS:</span> HappeyOS 2.1 LTS x86_64</div>'
+    + '<div><span class="kcyan">Host:</span> Potassium \u03A9 Gen4</div>'
+    + '<div><span class="kcyan">Kernel:</span> 6.7.4</div>'
+    + '<div><span class="kcyan">Uptime:</span> ' + uptimeStr() + '</div>'
+    + '<div><span class="kcyan">Resolution:</span> 1920x1080 @ 60Hz</div>'
+    + '<div><span class="kcyan">DE:</span> LarpDE</div>'
+    + '<div><span class="kcyan">CPU:</span> Potassium \u03A9 Gen4 (16) @ 8GHz</div>'
+    + '<div><span class="kcyan">GPU:</span> AMD Radeon RX 9060 XT</div>'
+    + '<div><span class="kcyan">Memory:</span> 4128MiB / 131072MiB DDR3</div>'
+    + '<div><span class="kcyan">Disk:</span> 2.4T / 10T NVMe Gen5</div>'
+    + '</div></div>');
+  };
+  const runJS = code => {
+    if (!code){ kprint('usage: js <code>', 'kdim'); return; }
+    const logs = [];
+    const c = { log:(...a)=>logs.push(a.join(' ')) };
+    try {
+      const r = new Function('console', '"use strict"; return (' + code + ');')(c);
+      logs.forEach(l => kprint(l, 'kdim'));
+      kprint(r === undefined ? 'undefined' : String(r), r === undefined ? 'kdim' : 'kgreen');
+    } catch(e1) {
+      try {
+        new Function('console', '"use strict"; ' + code)(c);
+        logs.forEach(l => kprint(l, 'kdim'));
+        if (!logs.length) kprint('-- ok (no output)', 'kdim');
+      } catch(e2){ kprint(e2.name + ': ' + e2.message, 'kred'); }
+    }
+  };
+  const shut = () => {
+    $('#shut-msg').textContent = 'Signing out';
+    $('#shut').classList.add('show');
+    shutShown = true;
+  };
+  const cmd = raw => {
+    const t = raw.trim();
+    if (sudo){
+      sudo.n++;
+      if (sudo.n < 3){ kprint('Sorry, try again.', 'kred'); }
+      else { kprint('happey is not in the sudoers file. This incident will be reported.', 'kred'); sudo = null; }
+      promptEl.textContent = sudo ? '[sudo] password for happey: ' : P();
+      input.type = sudo ? 'password' : 'text';
+      return;
+    }
+    if (!t) return;
+    hist.push(t); hi = hist.length;
+    const sp = t.indexOf(' ');
+    const c = (sp === -1 ? t : t.slice(0, sp)).toLowerCase();
+    const a = sp === -1 ? '' : t.slice(sp + 1).trim();
+    if (c === 'help') help();
+    else if (c === 'fastfetch' || c === 'neofetch') ff();
+    else if (c === 'js' || c === 'javascript') runJS(a);
+    else if (c === 'clear' || c === 'cls') out.innerHTML = '';
+    else if (c === 'kill' || c === 'exit' || c === 'logout') shut();
+    else if (c === 'sudo'){
+      if (!a) kprint('usage: sudo <command>', 'kdim');
+      else { sudo = { n: 0 }; promptEl.textContent = '[sudo] password for happey: '; input.type = 'password'; kprint('[sudo] password for happey: (any password will be rejected)', 'kdim'); }
+    }
+    else if (c === 'ls' || c === 'dir'){
+      const target = a ? resolveDir(cwd, a) : cwd.slice();
+      const node = target && nodeAt(target);
+      if (!node || !node.children) kprint('ls: cannot access \'' + a + '\': No such file or directory', 'kred');
+      else kprint(Object.keys(node.children).map(n => n + (node.children[n].t === 'dir' ? '/' : '')).join('   ') || '(empty)', 'kcyan');
+    }
+    else if (c === 'pwd') kprint('/' + cwd.join('/'));
+    else if (c === 'whoami') kprint('happey');
+    else if (c === 'echo') kprint(a.replace(/^["']|["']$/g, ''));
+    else if (c === 'cat'){
+      if (!a){ kprint('usage: cat <file>', 'kred'); return; }
+      const f = resolveFile(cwd, a) || fsFind(a);
+      if (!f){ kprint('cat: ' + a + ': No such file or directory', 'kred'); return; }
+      if (f.t === 'dir'){ kprint('cat: ' + a + ': Is a directory', 'kred'); return; }
+      if (f.t !== 'txt'){ kprint('cat: ' + a + ': binary file — open Files to view', 'kdim'); return; }
+      kprint(f.c || '', '');
+    }
+    else if (c === 'cd'){
+      if (!a) cwd = ['Home'];
+      else {
+        const dest = resolveDir(cwd, a);
+        if (!dest || !nodeAt(dest)) kprint('bash: cd: ' + a + ': No such file or directory', 'kred');
+        else cwd = dest.length ? dest : ['Home'];
+      }
+      promptEl.textContent = P();
+    }
+    else if (c === 'date') kprint(new Date().toString());
+    else if (c === 'uname') kprint('Linux potassium 6.7.4 x86_64 GNU/Linux');
+    else if (c === 'history') hist.forEach((h, i) => kprint('  ' + i + '  ' + h, 'kdim'));
+    else if (c === 'msg'){
+      if (!a) kprint('usage: msg <your message>', 'kdim');
+      else {
+        kprint('Sending...', 'kdim');
+        sendHappeyMsg(a).then(r => kprint(r.info, r.ok ? 'kgreen' : 'kred'));
+      }
+    }
+    else kprint('bash: ' + c + ': command not found', 'kred');
+  };
+  input.addEventListener('keydown', e => {
+    if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Enter') sfx('text', 0.15);
+    if (e.key === 'Enter'){ const v = input.value; echo(sudo ? '********' : v); input.value = ''; cmd(v); b.scrollTop = b.scrollHeight; }
+    else if (e.key === 'ArrowUp'){ e.preventDefault(); if (hist.length && hi > 0){ hi--; input.value = hist[hi] || ''; } }
+    else if (e.key === 'ArrowDown'){ e.preventDefault(); if (hi < hist.length - 1){ hi++; input.value = hist[hi] || ''; } else { hi = hist.length; input.value = ''; } }
+    else if (e.key === 'l' && e.ctrlKey){ e.preventDefault(); out.innerHTML = ''; }
+    else if (e.key === 'c' && e.ctrlKey){ e.preventDefault(); echo(input.value + '^C'); input.value = ''; if (sudo){ sudo = null; promptEl.textContent = P(); input.type = 'text'; } }
+  });
+  b.addEventListener('click', e => { if (e.target.tagName !== 'INPUT') input.focus(); });
+  setTimeout(() => input.focus(), 300);
+}
+
+
+function mountDolphin(w, arg){
+  arg = arg || {};
+  const b = w.body;
+  b.innerHTML = '<div class="dolph"><div class="dside"><div data-p="Home">Home</div><div data-p="Desktop">Desktop</div><div data-p="Images">Images</div><div data-p="Music">Music</div></div>'
+    + '<div class="dwrap"><div class="fbar"><button data-b="back"><img src="assets/icons/prev.svg" alt="" draggable="false" style="width:16px;height:16px;pointer-events:none;vertical-align:middle;"></button>'
+    + '<button data-b="del">Delete</button></div>'
+    + '<div class="dmain"><input class="dbread" spellcheck="false" autocomplete="off"><div class="dlist"></div><div class="dpreview" style="display:none"></div>'
+    + '<div class="dedit" style="display:none"><textarea></textarea><div class="ebtns"><button data-e="save">Save</button><button data-e="cancel">Cancel</button></div></div></div></div></div>';
+  const SIDES = { Home: ['Home'], Desktop: ['Home', 'Desktop'], Images: ['Home', 'Images'], Music: ['Home', 'Music'] };
+  let cur = (arg.path || ['Home']).slice();
+  let sel = arg.select || null;
+  let previewed = null;
+  const back = [];
+  const list = b.querySelector('.dlist'), prev = b.querySelector('.dpreview'),
+        bread = b.querySelector('.dbread'), edit = b.querySelector('.dedit'),
+        ta = edit.querySelector('textarea');
+  const btns = {};
+  b.querySelectorAll('.fbar button').forEach(x => { btns[x.getAttribute('data-b')] = x; });
+  w.refresh = () => show();
+  bread.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const dest = resolveDir(cur, bread.value);
+    if (!dest || !nodeAt(dest)){
+      bread.style.borderColor = '#c00000';
+      setTimeout(() => { bread.style.borderColor = ''; }, 800);
+      return;
+    }
+    if (dest.join('/') !== cur.join('/')) back.push(cur.slice());
+    cur = dest; sel = null; show();
+  });
+  const curNode = () => nodeAt(cur);
+  function commit(){
+    fsSave();
+    renderDeskIcons();
+    refreshFilesWindows();
+  }
+  function show(){
+    edit.style.display = 'none';
+    list.style.display = '';
+    const dir = curNode();
+    if (!dir){ cur = ['Home']; return show(); }
+    if (document.activeElement !== bread) bread.value = '/' + cur.join('/');
+    b.querySelectorAll('.dside div').forEach(x => {
+      const p = SIDES[x.getAttribute('data-p')];
+      x.classList.toggle('sel', !!p && p.join('/') === cur.join('/'));
+    });
+    const names = Object.keys(dir.children).sort((a, c2) => {
+      const A = dir.children[a], B = dir.children[c2];
+      if ((A.t === 'dir') !== (B.t === 'dir')) return A.t === 'dir' ? -1 : 1;
+      return a.localeCompare(c2);
+    });
+    list.innerHTML = '';
+    if (!names.length) list.innerHTML = '<div style="color:#666;padding:10px;">This folder is empty.</div>';
+    names.forEach(nm => {
+      const d = document.createElement('div');
+      d.className = 'dfile' + (sel === nm ? ' sel' : '');
+      const g = document.createElement('span'); g.className = 'g'; g.innerHTML = glyph(dir.children[nm]);
+      const t = document.createElement('span'); t.textContent = nm;
+      d.appendChild(g); d.appendChild(t);
+      d.addEventListener('click', () => { if (IS_MOBILE) openEntry(nm); else { sfx('click'); sel = nm; previewed = null; list.querySelectorAll('.dfile').forEach(x => x.classList.remove('sel')); d.classList.add('sel'); drawPreview(); paintBtns(); } });
+      d.addEventListener('dblclick', () => openEntry(nm));
+      list.appendChild(d);
+    });
+    drawPreview();
+    paintBtns();
+  }
+  function paintBtns(){
+    const dir = curNode();
+    if (!dir) return;
+    const ro = !!dir.ro;
+    const has = !!sel && !!dir.children[sel];
+    btns.del.disabled = ro || !has || dir.children[sel].sys;
+    btns.back.disabled = !back.length;
+  }
+  function drawPreview(){
+    const dir = curNode();
+    const n = sel ? dir.children[sel] : null;
+    if (!n || n.t === 'dir' || previewed !== sel){ prev.style.display = 'none'; return; }
+    prev.style.display = 'block';
+    prev.innerHTML = '';
+    const h = document.createElement('b'); h.textContent = sel; prev.appendChild(h);
+    if (n.t === 'txt'){
+      const p = document.createElement('div'); p.textContent = (n.c || '').slice(0, 400); prev.appendChild(p);
+      const o = document.createElement('button'); o.textContent = 'Open'; o.style.marginTop = '8px';
+      o.addEventListener('click', () => { sfx('click'); openEditor(sel); });
+      prev.appendChild(o);
+    } else if (n.t === 'img'){
+      const im = document.createElement('img'); im.src = imgSrc(sel);
+      im.onerror = () => { im.outerHTML = '<div>missing asset</div>'; };
+      prev.appendChild(im);
+    } else if (n.t === 'mp3'){
+      const au = document.createElement('audio'); au.controls = true; au.src = mp3Src(sel);
+      prev.appendChild(au);
+    }
+  }
+  function openEntry(nm){
+    const dir = curNode();
+    const n = dir.children[nm];
+    if (!n) return;
+    sfx('click');
+    sel = nm; previewed = null;
+    if (n.t === 'dir'){ back.push(cur.slice()); cur = cur.concat([nm]); sel = null; show(); }
+    else if (n.t === 'txt') openEditor(nm);
+    else if (n.t === 'img'){ openWin('viewer', { src: nm }); show(); }
+    else if (n.t === 'mp3'){ openWin('elisa', { src: nm }); show(); }
+    else show();
+  }
+  function openEditor(nm){
+    const dir = curNode();
+    const n = dir.children[nm];
+    if (!n || n.t !== 'txt') return;
+    sel = nm;
+    list.style.display = 'none';
+    prev.style.display = 'none';
+    bread.value = '/' + cur.join('/') + '/' + nm;
+    edit.style.display = 'flex';
+    ta.value = n.c || '';
+    ta.focus();
+  }
+  edit.querySelector('[data-e="save"]').addEventListener('click', () => {
+    const dir = curNode();
+    const n = sel && dir.children[sel];
+    if (n && n.t === 'txt' && !dir.ro){ n.c = ta.value; n.m = Date.now(); commit(); sfx('text', 0.25); }
+    show();
+  });
+  edit.querySelector('[data-e="cancel"]').addEventListener('click', () => { sfx('click'); show(); });
+  function nav(path){
+    if (path.join('/') === cur.join('/')) return;
+    back.push(cur.slice());
+    cur = path.slice();
+    sel = null; previewed = null;
+    show();
+  }
+  b.querySelectorAll('.dside div').forEach(x => x.addEventListener('click', () => { sfx('click'); nav(SIDES[x.getAttribute('data-p')]); }));
+  btns.back.addEventListener('click', () => { if (back.length){ sfx('click'); cur = back.pop(); sel = null; previewed = null; show(); } });
+  btns.del.addEventListener('click', () => {
+    const dir = curNode();
+    if (dir.ro || !sel || !dir.children[sel] || dir.children[sel].sys) return;
+    sfx(dir.children[sel].t === 'dir' ? 'delperm' : 'del');
+    delete dir.children[sel];
+    sel = null; commit(); show();
+  });
+  show();
+  if (arg.edit && sel){
+    const n = curNode().children[sel];
+    if (n && n.t === 'txt') openEditor(sel);
+  }
+}
+
+
+function collectImgs(){
+  const out = [];
+  const walk = node => {
+    Object.keys(node.children || {}).forEach(k => {
+      const n = node.children[k];
+      if (n.t === 'img'){ if (out.indexOf(k) === -1) out.push(k); }
+      else if (n.t === 'dir') walk(n);
+    });
+  };
+  walk(FS);
+  return out;
+}
+function mountViewer(w, arg){
+  arg = arg || {};
+  const b = w.body;
+  b.innerHTML = '<div style="background:#000;height:100%;display:flex;flex-direction:column;">'
+    + '<div class="fbar"><button data-v="back" style="display:none;"><img src="assets/icons/prev.svg" alt="" draggable="false" style="width:16px;height:16px;pointer-events:none;vertical-align:middle;"></button><span class="vt" style="font-size:12px;align-self:center;"></span></div>'
+    + '<div class="vmain" style="flex:1;overflow:auto;padding:10px;min-height:0;"></div></div>';
+  const main = b.querySelector('.vmain'), back = b.querySelector('[data-v="back"]'), title = b.querySelector('.vt');
+  function showGrid(){
+    back.style.display = 'none';
+    title.textContent = 'Photos';
+    main.style.display = 'grid';
+    main.style.gridTemplateColumns = 'repeat(auto-fill,minmax(110px,1fr))';
+    main.style.gap = '8px';
+    main.style.alignContent = 'start';
+    main.innerHTML = '';
+  const all = collectImgs();
+  if (all.indexOf('wallpaper/wallpaper.jpg') === -1) all.push('wallpaper/wallpaper.jpg');
+  all.forEach(nm => {
+      const im = document.createElement('img');
+      im.src = imgSrc(nm); im.alt = nm;
+      im.style.cssText = 'width:100%;height:90px;object-fit:cover;cursor:pointer;background:#111;';
+      im.onerror = () => im.remove();
+      im.addEventListener('click', () => showOne(nm));
+      main.appendChild(im);
+    });
+  }
+  function showOne(nm){
+    back.style.display = '';
+    title.textContent = nm;
+    main.style.display = 'flex';
+    main.style.alignItems = 'center';
+    main.style.justifyContent = 'center';
+    main.innerHTML = '';
+    const im = document.createElement('img');
+    im.src = imgSrc(nm); im.alt = nm;
+    im.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;';
+    im.onerror = () => { main.textContent = 'missing asset'; };
+    main.appendChild(im);
+  }
+  back.addEventListener('click', showGrid);
+  if (arg.src) showOne(arg.src); else showGrid();
+}
+
+
+
+const DOC_BIOS = {
+  'Angery': 'Perpetually furious about something. Nobody remembers what.\n\nFull documentation pending — bug happey for the lore.',
+  'BaconGuy': 'Smells faintly of breakfast. Allegedly a guy. Allegedly bacon.\n\nFull documentation pending — bug happey for the lore.',
+  'Conester': 'Cone-shaped and unbothered. Possibly contains ice cream.\n\nFull documentation pending — bug happey for the lore.',
+  'Happey': 'The original cupcake. Renders farms, writes songs, breaks operating systems.\n\nFull documentation pending — bug happey for the lore.',
+  'Moff': 'Soft. Round. Probably plotting something adorable.\n\nFull documentation pending — bug happey for the lore.',
+  'RobloxKidForty': 'Forty what? Forty who? The kid knows. The kid is forty.\n\nFull documentation pending — bug happey for the lore.',
+  'Uncia': 'Elusive mountain ghost. Spotted only in png form.\n\nFull documentation pending — bug happey for the lore.'
+};
+const DOC_FALLBACK = ['documents/Angery.png', 'documents/BaconGuy.png', 'documents/Conester.png', 'documents/Happey.png', 'documents/Moff.png', 'documents/RobloxKidForty.png', 'documents/Uncia.png'];
+let CHAR_CACHE = null, INFO_CACHE = null, OMEGA_CACHE = null, RAWDB = {};
+async function loadCharacters(force){
+  if (CHAR_CACHE && CHAR_CACHE.length && !force) return CHAR_CACHE;
+  try {
+    const r = await fetch('config/characters.json');
+    if (r.ok){
+      const j = await r.json();
+      const jl = {};
+      Object.keys(j || {}).forEach(k => { jl[String(k).toLowerCase()] = j[k]; });
+      if (jl.characters && Array.isArray(jl.characters) && jl.characters.length){
+        const list = jl.characters.filter(c => c && c.name).map(c => ({
+          name: String(c.name),
+          img: c.image || ('documents/' + String(c.name) + '.png'),
+          bio: c.bio !== undefined && c.bio !== null ? String(c.bio) : (DOC_BIOS[String(c.name)] || ''),
+          tag: c.tag !== undefined && c.tag !== null ? String(c.tag) : '',
+          order: (c.order === undefined || c.order === null || c.order === '') ? 9999 : +c.order
+        }));
+        list.sort((a, b) => (a.order - b.order) || a.name.localeCompare(b.name));
+        CHAR_CACHE = list;
+        INFO_CACHE = (Array.isArray(jl.info) ? jl.info : []).filter(c => c && c.name).map(c => ({
+          name: String(c.name),
+          tag: c.tag !== undefined && c.tag !== null ? String(c.tag) : '',
+          bio: c.bio !== undefined && c.bio !== null ? String(c.bio) : '',
+          order: (c.order === undefined || c.order === null || c.order === '') ? 9999 : +c.order
+        })).sort((a, b) => (a.order - b.order) || a.name.localeCompare(b.name));
+        OMEGA_CACHE = (Array.isArray(jl.omegaverse) ? jl.omegaverse : []).filter(c => c && c.name).map(c => ({
+          name: String(c.name),
+          tag: c.tag !== undefined && c.tag !== null ? String(c.tag) : '',
+          img: c.image || '',
+          bio: c.bio !== undefined && c.bio !== null ? String(c.bio) : '',
+          order: (c.order === undefined || c.order === null || c.order === '') ? 9999 : +c.order
+        })).sort((a, b) => (a.order - b.order) || a.name.localeCompare(b.name));
+        RAWDB = {};
+        [['Characters', j.characters], ['Info', j.info], ['Omegaverse', j.omegaverse]].forEach(([sec, arr]) => {
+          (Array.isArray(arr) ? arr : []).forEach(c => {
+            if (c && c.name) RAWDB[sec + '|' + String(c.name).toLowerCase()] = c;
+          });
+        });
+        return list;
+      }
+    }
+  } catch(e){}
+  return null;
+}
+function docCharacters(){
+  if (CHAR_CACHE && CHAR_CACHE.length) return CHAR_CACHE;
+  const files = (DOC_FILES && DOC_FILES.length ? DOC_FILES : DOC_FALLBACK).slice();
+  const seen = {};
+  const out = [];
+  files.forEach(f => {
+    const base = f.split('/').pop().replace(/\.[^.]+$/, '');
+    if (!base || seen[base]) return;
+    seen[base] = true;
+    out.push({ name: base, img: f, bio: DOC_BIOS[base] || '', order: 9999 });
+  });
+  out.sort((a, b) => a.name.localeCompare(b.name));
+  return out;
+}
+function mountDocs(w){
+  const b = w.body;
+  b.innerHTML = '<div class="about"><div class="acount">Loading…</div><div class="alist"></div></div>';
+  const show = () => {
+    mountCards(w, docEntries(), 'bio:', { icon: 'assets/icons/text.svg', search: 'Search characters', count: 'characters', hideCount: true, size: [480, 680], chrome: false, listClass: 'docgrid' });
+    if (location.protocol === 'file:' && !(CHAR_CACHE && CHAR_CACHE.length)){
+      const c = b.querySelector('.acount');
+      if (c) c.textContent += ' — JSON needs http, use serve.py';
+    }
+  };
+  loadCharacters(true).then(show).catch(show);
+}
+function docInfo(){
+  if (INFO_CACHE && INFO_CACHE.length) return INFO_CACHE;
+  return [{ name: 'About', tag: 'id: about', order: 1,
+    bio: 'A running documentation of every character.\n\nMaintained by happey, powered by Potassium.' }];
+}
+function docOmega(){
+  if (OMEGA_CACHE && OMEGA_CACHE.length) return OMEGA_CACHE;
+  return [];
+}
+function docEntries(){
+  const out = [];
+  docInfo().forEach(c => out.push({
+    section: 'Info',
+    title: c.name,
+    sub: c.tag || '',
+    body: (c.bio || '').trim() || 'No documentation written yet — bug happey about it.',
+    img: c.img || ''
+  }));
+  docOmega().forEach(c => out.push({
+    section: 'Omegaverse',
+    title: c.name,
+    sub: c.tag || '',
+    body: (c.bio || '').trim() || 'No documentation written yet — bug happey about it.',
+    img: c.img || ''
+  }));
+  docCharacters().forEach(c => out.push({
+    section: 'Characters',
+    title: c.name,
+    sub: c.tag || '',
+    body: (c.bio || DOC_BIOS[c.name] || '').trim() || 'No documentation written yet — bug happey about it.',
+    img: c.img
+  }));
+  return out;
+}
+const FLAGS = { gay: 'flags/gay.png', rainbow: 'flags/gay.png', lesbian: 'flags/lesbian.png',
+  bisexual: 'flags/bisexual.png', bi: 'flags/bisexual.png',
+  transgender: 'flags/transgender.png', trans: 'flags/transgender.png',
+  nonbinary: 'flags/nonbinary.png', enby: 'flags/nonbinary.png',
+  pansexual: 'flags/pansexual.png', pan: 'flags/pansexual.png',
+  asexual: 'flags/asexual.png', ace: 'flags/asexual.png',
+  queer: 'flags/gay.png', genderfluid: 'flags/genderfluid.png' };
+function flagSrc(f){
+  f = String(f || '').trim();
+  if (!f) return '';
+  if (/[\/\\]/.test(f) || /\.[a-z0-9]{2,4}$/i.test(f)) return imgSrc(f);
+  const key = f.toLowerCase().replace(/[^a-z]/g, '');
+  return imgSrc(FLAGS[key] || ('flags/' + key + '.png'));
+}
+function bioFields(raw){
+  raw = raw || {};
+  const one = v => (v === undefined || v === null) ? '' : String(v);
+  const many = v => Array.isArray(v) ? v.map(String).filter(Boolean) : (v === undefined || v === null || v === '' ? [] : [String(v)]);
+  return {
+    rows: [['Species', one(raw.species)], ['Pronouns', one(raw.pronouns)], ['Gender', one(raw.gender)], ['Sexuality', one(raw.sexuality)], ['Aliases', many(raw.aliases).join(', ')]].filter(r => r[1]),
+    flags: (Array.isArray(raw.flag) ? raw.flag.map(String) : String(raw.flag || '').split(/[\/,]/).map(s => s.trim())).filter(Boolean),
+    relations: many(raw.relations)
+  };
+}
+function openBioByName(nm){
+  const key = String(nm).toLowerCase();
+  for (const s of ['Characters', 'Omegaverse', 'Info']){
+    const hit = RAWDB[s + '|' + key];
+    if (hit) { openWin('bio:' + s + ':' + hit.name, { title: hit.name, icon: 'assets/icons/text.svg', bio: hit.name, sec: s, size: [480, 680] }); return; }
+  }
+  const ch = docCharacters(), om = docOmega(), inf = docInfo();
+  const f = ch.concat(om, inf).find(x => x.name && x.name.toLowerCase() === key);
+  if (f){
+    const s = om.indexOf(f) !== -1 ? 'Omegaverse' : inf.indexOf(f) !== -1 ? 'Info' : 'Characters';
+    openWin('bio:' + s + ':' + f.name, { title: f.name, icon: 'assets/icons/text.svg', bio: f.name, sec: s, size: [480, 680] });
+  }
+}
+function mountBio(w, name, sec){
+  const all = docCharacters().map(c => ({ section: 'Characters', name: c.name, img: c.img, bio: c.bio || DOC_BIOS[c.name] || '' }))
+    .concat(docOmega().map(c => ({ section: 'Omegaverse', name: c.name, img: c.img || '', bio: c.bio || '' })))
+    .concat(docInfo().map(c => ({ section: 'Info', name: c.name, img: c.img || '', bio: c.bio || '' })));
+  const c = all.find(x => x.name === name && (!sec || x.section === sec)) || all.find(x => x.name === name) || { section: '', name: name, img: '' };
+  const bio = (c.bio || DOC_BIOS[name] || '').trim() || 'No documentation written yet — bug happey about it.';
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'background:#111;height:100%;overflow:auto;padding:16px;box-sizing:border-box;display:flex;gap:14px;align-items:flex-start;';
+  const sheet = document.createElement('div');
+  sheet.style.cssText = 'background:#fff;width:200px;flex:0 0 200px;aspect-ratio:1/1;padding:10px;box-sizing:border-box;box-shadow:0 4px 18px rgba(0,0,0,0.6);';
+  if (c.img){
+    const im = document.createElement('img');
+    im.src = imgSrc(c.img); im.alt = name;
+    im.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;background:#fff;';
+    sheet.appendChild(im);
+  }
+  const tx = document.createElement('div');
+  tx.style.minWidth = '0';
+  const t = document.createElement('div');
+  t.style.cssText = 'color:#fff;font-size:17px;margin-bottom:8px;';
+  t.textContent = name;
+  const bd = document.createElement('div');
+  bd.style.cssText = 'color:#eee;font-size:13px;white-space:pre-wrap;line-height:1.6;';
+  bd.textContent = bio;
+  tx.appendChild(t);
+  const F = bioFields(RAWDB[(sec || '') + '|' + String(name).toLowerCase()] || {});
+  if (F.flags.length || F.rows.length || F.relations.length){
+    const tbl = document.createElement('div');
+    tbl.style.cssText = 'border:1px solid #333;margin-bottom:12px;';
+    if (F.flags.length){
+      const fw = document.createElement('div');
+      fw.style.cssText = 'padding:8px;text-align:center;border-bottom:1px solid #333;display:flex;gap:8px;justify-content:center;';
+      F.flags.forEach(f => {
+        const fi = document.createElement('img');
+        fi.src = flagSrc(f); fi.alt = '';
+        fi.style.cssText = 'height:26px;';
+        fi.onerror = () => fi.remove();
+        fw.appendChild(fi);
+      });
+      tbl.appendChild(fw);
+    }
+    F.rows.forEach(([k, v]) => {
+      const r = document.createElement('div');
+      r.style.cssText = 'display:flex;border-bottom:1px solid #333;';
+      const a = document.createElement('div');
+      a.style.cssText = 'flex:0 0 110px;padding:7px 10px;color:#fff;font-size:12px;border-right:1px solid #333;';
+      a.textContent = k;
+      const vv = document.createElement('div');
+      vv.style.cssText = 'flex:1;padding:7px 10px;color:#00eaff;font-size:12px;';
+      vv.textContent = v;
+      r.appendChild(a); r.appendChild(vv); tbl.appendChild(r);
+    });
+    if (F.relations.length){
+      const r = document.createElement('div');
+      r.style.cssText = 'display:flex;border-bottom:1px solid #333;';
+      const a = document.createElement('div');
+      a.style.cssText = 'flex:0 0 110px;padding:7px 10px;color:#fff;font-size:12px;border-right:1px solid #333;';
+      a.textContent = 'Relations';
+      const vv = document.createElement('div');
+      vv.style.cssText = 'flex:1;padding:7px 10px;font-size:12px;';
+      F.relations.forEach((rn, i) => {
+        if (i) vv.appendChild(document.createTextNode(', '));
+        const link = document.createElement('a');
+        link.href = '#';
+        link.textContent = rn;
+        link.style.cssText = 'color:#00eaff;cursor:pointer;';
+        link.addEventListener('click', e => { e.preventDefault(); sfx('click'); openBioByName(rn); });
+        vv.appendChild(link);
+      });
+      r.appendChild(a); r.appendChild(vv); tbl.appendChild(r);
+    }
+    tx.appendChild(tbl);
+  }
+  tx.appendChild(bd);
+  if (c.img) wrap.appendChild(sheet);
+  wrap.appendChild(tx);
+  w.body.appendChild(wrap);
+  const fit = () => {
+    const prevH = wrap.style.height;
+    wrap.style.height = 'auto';
+    const contentH = wrap.scrollHeight;
+    wrap.style.height = prevH;
+    const need = 34 + contentH + 4;
+    const h = Math.min(Math.max(need, 180), window.innerHeight - 120);
+    w.el.style.height = h + 'px';
+    w.el.style.top = Math.max((window.innerHeight - 40 - h) / 2, 0) + 'px';
+  };
+  requestAnimationFrame(fit);
+  const sheetImg = sheet.querySelector('img');
+  if (sheetImg){ if (sheetImg.complete) requestAnimationFrame(fit); else sheetImg.addEventListener('load', fit); }
+}
+function mountCard(w, key, set){
+  const c = (set || CARDS).find(x => x.title === key) || { title: key, sub: '', body: '' };
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'background:#111;height:100%;overflow:auto;padding:16px;border-left:4px solid #00eaff;box-sizing:border-box;';
+  const t = document.createElement('div');
+  t.style.cssText = 'color:#fff;font-size:17px;margin-bottom:4px;';
+  t.textContent = c.title;
+  const s = document.createElement('div');
+  s.style.cssText = 'color:#00eaff;font-size:12px;margin-bottom:12px;';
+  s.textContent = c.sub;
+  const bd = document.createElement('div');
+  bd.style.cssText = 'color:#eee;font-size:13px;white-space:pre-wrap;line-height:1.6;';
+  bd.textContent = c.body;
+  wrap.appendChild(t); wrap.appendChild(s); wrap.appendChild(bd);
+  w.body.appendChild(wrap);
+}
+
+
+function mountAbout(w){ mountCards(w, CARDS, 'card:', { hideCount: true }); }
+function mountCards(w, cards, prefix, opts){
+  opts = opts || {};
+  const b = w.body;
+  b.innerHTML = '<div class="about">' + (opts.chrome === false ? '' : '<div class="asearch"><input placeholder="' + (opts.search || 'Search cards and menus') + '"><button>Sort: Default</button></div>')
+    + '<div class="acount"></div><div class="alist' + (opts.listClass ? ' ' + opts.listClass : '') + '"></div></div>';
+  const inp = b.querySelector('input'), btn = b.querySelector('button');
+  const list = b.querySelector('.alist'), cnt = b.querySelector('.acount');
+  let sort = 'Default', q = '';
+  const draw = () => {
+    let L = cards.filter(c => !q || c.title.toLowerCase().includes(q) || c.sub.toLowerCase().includes(q));
+    if (sort === 'A-Z') L = L.slice().sort((x, y) => x.title.localeCompare(y.title));
+    if (sort === 'Z-A') L = L.slice().sort((x, y) => y.title.localeCompare(x.title));
+    if (opts.hideCount) cnt.style.display = 'none'; else cnt.textContent = L.length + ' ' + (opts.count || 'cards');
+    let h = '';
+    const secs = [];
+    cards.forEach(c => { if (secs.indexOf(c.section) === -1) secs.push(c.section); });
+    secs.forEach(sec => {
+      const s = L.filter(c => c.section === sec);
+      if (!s.length) return;
+      h += '<div class="asec">' + sec + '</div><div class="agrid">';
+      s.forEach(c => { h += '<div class="acard" data-k="' + c.section + '|' + c.title + '"><div class="t">' + c.title + '</div><div class="s">' + c.sub + '</div></div>'; });
+      h += '</div>';
+    });
+    list.innerHTML = h || '<div style="color:#666;margin-top:10px;">No matches.</div>';
+    list.querySelectorAll('.acard').forEach(el => {
+      el.addEventListener('mouseenter', () => sfx('hover', 0.22));
+      el.addEventListener('click', () => {
+      const parts = (el.getAttribute('data-k') || '').split('|');
+      const c = cards.find(x => x.section === parts[0] && x.title === parts[1]) || cards.find(x => x.title === el.getAttribute('data-k'));
+      if (!c) return;
+      sfx('click');
+      openWin(prefix + c.section + ':' + c.title, { title: c.title, icon: opts.icon || 'assets/icons/about.svg', card: c.title, bio: c.title, sec: c.section, size: opts.size || [440, 320] });
+      });
+    });
+  };
+  if (inp) inp.addEventListener('input', () => { q = inp.value.toLowerCase(); draw(); });
+  if (btn) btn.addEventListener('click', () => {
+    sort = sort === 'Default' ? 'A-Z' : sort === 'A-Z' ? 'Z-A' : 'Default';
+    btn.textContent = 'Sort: ' + sort; draw();
+  });
+  draw();
+}
+
+
+function mountFalkon(w){
+  const b = w.body;
+  b.innerHTML = '<div style="display:flex;flex-direction:column;height:100%;background:#f0f0f0;">'
+    + '<div class="fbar"><button data-n="back"><img src="assets/icons/prev.svg" alt="" draggable="false" style="width:16px;height:16px;pointer-events:none;vertical-align:middle;"></button>'
+    + '<button data-n="fwd"><img src="assets/icons/next.svg" alt="" draggable="false" style="width:16px;height:16px;pointer-events:none;vertical-align:middle;"></button>'
+    + '<input type="text" placeholder="Search or enter address" style="flex:1;min-width:60px;font-size:12px;padding:5px 8px;border:1px solid #767676;outline:none;font-family:inherit;"></div>'
+    + '<div class="bhome" style="flex:1;overflow:auto;padding:24px;color:#000;">'
+    + '<div style="font-size:28px;margin-bottom:4px;">\u{1F310}</div>'
+    + '<h2 style="font-weight:600;margin-bottom:12px;">Falkon</h2>'
+    + '<div class="blinks" style="display:flex;gap:8px;flex-wrap:wrap;"></div>'
+    + '<p style="margin-top:16px;font-size:12px;color:#555;">Tip: many big sites block embedding and show a blank page.</p></div>'
+    + '<iframe class="bview" sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-popups-to-escape-sandbox" style="flex:1;border:none;background:#fff;width:100%;min-height:0;display:none;"></iframe>'
+    + '<div class="blocal" style="flex:1;overflow:auto;padding:24px;color:#000;background:#fff;display:none;"></div>'
+    + '</div>';
+  const inp = b.querySelector('input'), frame = b.querySelector('.bview'),
+        home = b.querySelector('.bhome'), local = b.querySelector('.blocal');
+  const btns = {};
+  b.querySelectorAll('.fbar button').forEach(x => { btns[x.getAttribute('data-n')] = x; });
+  let hist = [], hi = -1;
+  [['Happey', 'happey.local'],
+   ['GitHub', 'https://github.com/TotallyNotHappey/abouthappey'],
+   ['Example', 'https://example.com'],
+   ['Wikipedia', 'https://www.wikipedia.org']
+  ].forEach(([t, u]) => {
+    const a = document.createElement('button');
+    a.textContent = t;
+    a.style.cssText = 'padding:8px 16px;background:#fff;border:1px solid #999;cursor:pointer;font-family:inherit;font-size:12px;color:#000;';
+    a.addEventListener('click', () => { inp.value = u; go(u); });
+    b.querySelector('.blinks').appendChild(a);
+  });
+  function norm(u){
+    u = (u || '').trim();
+    if (!u) return null;
+    if (/^happey\.local\/?$/i.test(u)) return 'happey.local';
+    if (/^https?:\/\//i.test(u)) return u;
+    if (/^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(\/\S*)?$/i.test(u)) return 'https://' + u;
+    return 'https://duckduckgo.com/?q=' + encodeURIComponent(u);
+  }
+  function show(el){
+    home.style.display = el === home ? 'block' : 'none';
+    frame.style.display = el === frame ? 'block' : 'none';
+    local.style.display = el === local ? 'block' : 'none';
+  }
+  function go(u, push){
+    const url = norm(u);
+    if (!url) return;
+    if (push !== false){
+      hist = hist.slice(0, hi + 1);
+      hist.push(url);
+      hi = hist.length - 1;
+    }
+    inp.value = url;
+    if (url === 'happey.local'){
+      show(local);
+      local.innerHTML = '<h2 style="font-weight:600;margin-bottom:8px;">happey.local</h2>'
+        + '<p style="font-size:13px;line-height:1.6;">Enby. 3D animation, music, Potassium-powered.<br>Contact: artifyber@gmail.com</p>';
+      return;
+    }
+    show(frame);
+    frame.src = url;
+  }
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') go(inp.value); });
+  btns.back.addEventListener('click', () => { if (hi > 0){ hi--; inp.value = hist[hi]; go(hist[hi], false); } });
+  btns.fwd.addEventListener('click', () => { if (hi < hist.length - 1){ hi++; inp.value = hist[hi]; go(hist[hi], false); } });
+  go('https://happey.run.place');
+}
+
+
+function mountElisa(w, arg){
+  arg = arg || {};
+  const b = w.body;
+  const tracks = Object.keys((nodeAt(['Home', 'Music']) || { children: {} }).children)
+    .filter(k => nodeAt(['Home', 'Music']).children[k].t === 'mp3')
+    .sort((a, c) => a.localeCompare(c));
+  b.innerHTML = '<div class="pad"><audio controls style="width:100%;"></audio></div>';
+  const au = b.querySelector('audio');
+  const start = (arg.src && tracks.indexOf(arg.src) !== -1) ? arg.src : tracks[0];
+  if (start){ au.src = mp3Src(start); au.play().catch(() => {}); }
+}
+function applyWall(){
+  const wset = SET.wall || { t: 'image', v: 'wallpaper/wallpaper.jpg' };
+  const css = (wset.t === 'image' && wset.v) ? '#000 url("' + imgSrc(wset.v) + '") center/cover no-repeat' : (wset.v || '#0078D7');
+  ['wallbg', 'mwall'].forEach(id => {
+    const bg = document.getElementById(id);
+    if (bg) bg.style.background = css;
+  });
+}
+function preloadWall(){
+  const wset = SET.wall || { t: 'image', v: 'wallpaper/wallpaper.jpg' };
+  if (!wset || wset.t !== 'image' || !wset.v) return Promise.resolve();
+  return new Promise(res => {
+    const to = setTimeout(res, 6000);
+    try {
+      const im = new Image();
+      const done = () => { clearTimeout(to); res(); };
+      im.onload = done;
+      im.onerror = done;
+      im.src = imgSrc(wset.v);
+      if (im.decode) im.decode().then(done).catch(() => {});
+    } catch(e){ clearTimeout(to); res(); }
+  });
+}
+
+function mountPaint(w){
+  const b = w.body;
+  b.innerHTML = '<div style="display:flex;flex-direction:column;height:100%;background:#f0f0f0;">'
+    + '<div class="fbar"><button data-p="brush">Brush</button><button data-p="eraser">Eraser</button><button data-p="fill">Fill</button>'
+    + '<button data-p="clear">Clear</button><button data-p="save">Save</button><span style="flex:1"></span>'
+    + '<input type="range" min="1" max="40" value="5" style="width:90px;align-self:center;">'
+    + '<input type="color" value="#000000" style="width:34px;height:26px;padding:0;border:1px solid #999;cursor:pointer;align-self:center;"></div>'
+    + '<div class="pwrap" style="flex:1;overflow:hidden;background:#808080;padding:8px;min-height:0;"><canvas style="width:100%;height:100%;background:#fff;display:block;cursor:crosshair;touch-action:none;"></canvas></div></div>';
+  const cv = b.querySelector('canvas'), cx = cv.getContext('2d');
+  const wrap = b.querySelector('.pwrap');
+  function fit(){
+    const W = Math.max(50, wrap.clientWidth - 16), H = Math.max(50, wrap.clientHeight - 16);
+    if (cv.width === W && cv.height === H) return;
+    const tmp = document.createElement('canvas');
+    tmp.width = cv.width; tmp.height = cv.height;
+    try { tmp.getContext('2d').drawImage(cv, 0, 0); } catch(e){}
+    cv.width = W; cv.height = H;
+    cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, W, H);
+    try { cx.drawImage(tmp, 0, 0); } catch(e){}
+  }
+  fit();
+  try { new ResizeObserver(() => fit()).observe(wrap); } catch(e){}
+  let tool = 'brush', color = '#000000', size = 5, drawing = false, last = null;
+  const btns = {};
+  b.querySelectorAll('.fbar button[data-p]').forEach(x => { btns[x.getAttribute('data-p')] = x; });
+  const pick = t => {
+    tool = t;
+    ['brush', 'eraser', 'fill'].forEach(k => { btns[k].style.background = k === t ? '#cce8ff' : ''; });
+  };
+  btns.brush.addEventListener('click', () => pick('brush'));
+  btns.eraser.addEventListener('click', () => pick('eraser'));
+  btns.fill.addEventListener('click', () => pick('fill'));
+  btns.clear.addEventListener('click', () => { cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, cv.width, cv.height); });
+  btns.save.addEventListener('click', () => {
+    cv.toBlob(blob => {
+      if (!blob) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'happey-paint.png';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    }, 'image/png');
+  });
+  const col = b.querySelector('input[type=color]'), rng = b.querySelector('input[type=range]');
+  col.addEventListener('input', () => { color = col.value; if (tool === 'eraser') pick('brush'); });
+  rng.addEventListener('input', () => { size = +rng.value || 1; });
+  const pos = e => {
+    const r = cv.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * (cv.width / r.width), y: (e.clientY - r.top) * (cv.height / r.height) };
+  };
+  const stroke = (a, c) => {
+    cx.strokeStyle = tool === 'eraser' ? '#ffffff' : color;
+    cx.lineWidth = size; cx.lineCap = 'round'; cx.lineJoin = 'round';
+    cx.beginPath(); cx.moveTo(a.x, a.y); cx.lineTo(c.x, c.y); cx.stroke();
+  };
+  function flood(sx, sy){
+    const W = cv.width, H = cv.height;
+    if (sx < 0 || sy < 0 || sx >= W || sy >= H) return;
+    const img = cx.getImageData(0, 0, W, H), d = img.data;
+    const fr = parseInt(color.slice(1, 3), 16), fg = parseInt(color.slice(3, 5), 16), fb = parseInt(color.slice(5, 7), 16);
+    const si = (sy * W + sx) * 4;
+    const tr = d[si], tg = d[si + 1], tb = d[si + 2], ta = d[si + 3];
+    if (Math.abs(tr - fr) < 4 && Math.abs(tg - fg) < 4 && Math.abs(tb - fb) < 4 && ta === 255) return;
+    const match = i => Math.abs(d[i] - tr) < 32 && Math.abs(d[i + 1] - tg) < 32 && Math.abs(d[i + 2] - tb) < 32 && Math.abs(d[i + 3] - ta) < 32;
+    const stack = [[sx, sy]];
+    while (stack.length){
+      const top = stack.pop(), x = top[0], y = top[1];
+      let l = x;
+      while (l >= 0 && match((y * W + l) * 4)) l--;
+      l++;
+      let r = x;
+      while (r < W && match((y * W + r) * 4)) r++;
+      r--;
+      for (let i = l; i <= r; i++){
+        const o = (y * W + i) * 4;
+        d[o] = fr; d[o + 1] = fg; d[o + 2] = fb; d[o + 3] = 255;
+      }
+      for (let yy = y - 1; yy <= y + 1; yy += 2){
+        if (yy < 0 || yy >= H) continue;
+        let i = l;
+        while (i <= r){
+          if (match((yy * W + i) * 4)){ stack.push([i, yy]); while (i <= r && match((yy * W + i) * 4)) i++; }
+          else i++;
+        }
+      }
+    }
+    cx.putImageData(img, 0, 0);
+  }
+  cv.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    try { cv.setPointerCapture(e.pointerId); } catch(err){}
+    const p = pos(e);
+    if (tool === 'fill'){ flood(p.x | 0, p.y | 0); return; }
+    drawing = true; last = p;
+    stroke(p, { x: p.x + 0.1, y: p.y + 0.1 });
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!drawing) return;
+    const p = pos(e);
+    stroke(last, p); last = p;
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => cv.addEventListener(ev, () => { drawing = false; }));
+  pick('brush');
+}
+
+
+function mountSettings(w){
+  const b = w.body;
+  b.innerHTML = '<div class="pad"><div class="sset">'
+    + '<h3>Background image</h3><div class="wpickimg"></div>'
+    + '<h3>click me to reset website cookies</h3><button id="sReset" style="background:#fff;border:1px solid #999;padding:8px 18px;cursor:pointer;font-family:inherit;font-size:12px;color:#000;">Reset</button>'
+    + '</div></div>';
+  const grid = b.querySelector('.wpickimg');
+  const paint = () => {
+    const c = SET.wall || { t: 'image', v: 'wallpaper/wallpaper.jpg' };
+    grid.querySelectorAll('img').forEach(x => x.classList.toggle('sel', c.t === 'image' && c.v === x.alt));
+  };
+  ['wallpaper/wallpaper.jpg'].forEach(nm => {
+    const im = document.createElement('img');
+    im.src = imgSrc(nm); im.alt = nm;
+    im.onerror = () => im.remove();
+    im.addEventListener('click', () => {
+      SET.wall = { t: 'image', v: nm }; setSave(); applyWall(); paint();
+    });
+    grid.appendChild(im);
+  });
+  paint();
+  const rst = b.querySelector('#sReset');
+  let armed = false, armT = null;
+  rst.addEventListener('click', () => {
+    if (!armed){
+      armed = true;
+      rst.textContent = 'are you sure';
+      rst.style.borderColor = '#c00000';
+      rst.style.color = '#c00000';
+      armT = setTimeout(() => {
+        armed = false;
+        rst.textContent = 'Reset';
+        rst.style.borderColor = '';
+        rst.style.color = '';
+      }, 4000);
+      return;
+    }
+    clearTimeout(armT);
+    try {
+      const drop = [];
+      for (let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        if (k && k.indexOf('happeyos_') === 0) drop.push(k);
+      }
+      drop.forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
+    } catch(e){}
+    location.reload();
+  });
+}
+
+doBoot();
+})();
+</script>
+</body>
+</html>
