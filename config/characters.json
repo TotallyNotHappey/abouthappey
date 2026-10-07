@@ -1,0 +1,164 @@
+{
+  "characters": [
+    {
+      "name": "Happey",
+      "tag": "The Joyful One.",
+      "image": "documents/Happey.png",
+      "order": 1,
+      "bio": "WIP",
+      "species": "",
+      "pronouns": "",
+      "gender": "",
+      "sexuality": "",
+      "aliases": "",
+      "flag": "",
+      "relations": []
+    },
+    {
+      "name": "Angery",
+      "tag": "The Confident One.",
+      "image": "documents/Angery.png",
+      "order": 2,
+      "bio": "WIP",
+      "species": "",
+      "pronouns": "",
+      "gender": "",
+      "sexuality": "",
+      "aliases": "",
+      "flag": "",
+      "relations": []
+    },
+    {
+      "name": "Happina",
+      "tag": "The Graceful One",
+      "image": "documents/Happina.png",
+      "order": 3,
+      "bio": "WIP",
+      "species": "",
+      "pronouns": "",
+      "gender": "",
+      "sexuality": "",
+      "aliases": "",
+      "flag": "",
+      "relations": []
+    },
+    {
+      "name": "Conester",
+      "tag": "The Brave One.",
+      "image": "documents/Conester.png",
+      "order": 4,
+      "bio": "WIP",
+      "species": "",
+      "pronouns": "",
+      "gender": "",
+      "sexuality": "",
+      "aliases": "",
+      "flag": "",
+      "relations": []
+    },
+    {
+      "name": "BaconGuy",
+      "tag": "The Resilient One.",
+      "image": "documents/BaconGuy.png",
+      "order": 5,
+      "bio": "WIP",
+      "species": "",
+      "pronouns": "",
+      "gender": "",
+      "sexuality": "",
+      "aliases": "",
+      "flag": "",
+      "relations": []
+    },
+    {
+      "name": "Moff",
+      "tag": "The Fluffy One.",
+      "image": "documents/Moff.png",
+      "order": 6,
+      "bio": "WIP",
+      "species": "",
+      "pronouns": "",
+      "gender": "",
+      "sexuality": "",
+      "aliases": "",
+      "flag": "",
+      "relations": []
+    },
+    {
+      "name": "RobloxKidForty",
+      "tag": "The Anxious One.",
+      "image": "documents/RobloxKidForty.png",
+      "order": 7,
+      "bio": "WIP.",
+      "species": "",
+      "pronouns": "",
+      "gender": "",
+      "sexuality": "",
+      "aliases": "",
+      "flag": "",
+      "relations": []
+    },
+    {
+      "name": "Uncia",
+      "tag": "The Solitude One.",
+      "image": "documents/Uncia.png",
+      "order": 8,
+      "bio": "Uncia is a non-binary Snow Leopard with grey fur and black black spots on their fur.",
+      "species": "Snow Leopard",
+      "pronouns": "They/Them",
+      "gender": "Non-Binary",
+      "sexuality": "Pansexual",
+      "aliases": "Snowy",
+      "flag": "nonbinary/pansexual",
+      "relations": [
+        "Happey",
+        "Moff"
+      ]
+    },
+    {
+      "name": "Rina",
+      "tag": "The Rebellious One.",
+      "image": "documents/Rina.png",
+      "order": 9,
+      "bio": "Full documentation pending — bug happey for the lore.",
+      "species": "",
+      "pronouns": "",
+      "gender": "",
+      "sexuality": "",
+      "aliases": "",
+      "flag": "",
+      "relations": []
+    }
+  ],
+  "info": [
+    {
+      "name": "About",
+      "tag": "Happey",
+      "order": 1,
+      "bio": "Hello! I'm Happey! Don't get me confused with Happey! He is one of my first OC's that I've created.\n\nI'm really just a person on the internet that's into many, many things Roblox related.\n\nIf you want to learn more about me, click or find a app on the Desktop called About, it will give you many info about this website, why I made it and much more!",
+      "species": "",
+      "pronouns": "",
+      "gender": "",
+      "sexuality": "",
+      "aliases": "",
+      "flag": "",
+      "relations": []
+    }
+  ],
+  "omegaverse": [
+    {
+      "name": "Info",
+      "tag": "About the Omegaverse",
+      "image": "documents/omegaverse.png",
+      "order": 1,
+      "bio": "The Omegaverse is a universe that consists of all Characters shown in this Documentation. It consists of a Solar System similar to that of our universes that contains a Planet called HP-289 inhabited by anthro characters known as furries, humanoids, and other creatures alike. It includes almost everything our home planet Earth has to offer, like water, plants, oxygen, ect.",
+      "species": "",
+      "pronouns": "",
+      "gender": "",
+      "sexuality": "",
+      "aliases": "",
+      "flag": "",
+      "relations": []
+    }
+  ]
+}
