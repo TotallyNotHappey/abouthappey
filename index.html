@@ -181,14 +181,14 @@ async function doBoot(){
   finishBoot();
 }
 const FADE_MS = 2500;
-let bootDone = 0, bootTotal = 1, loadedShown = false;
+let bootDone = 0, bootTotal = 1, loadedShown = false, assetsReady = false;
 function bumpProg(){
   bootDone++;
   pbar.style.width = Math.min(100, bootDone / bootTotal * 100) + '%';
   maybeLoaded();
 }
 function maybeLoaded(){
-  if (loadedShown || !booted || bootDone < bootTotal) return;
+  if (loadedShown || !booted || !assetsReady || bootDone < bootTotal) return;
   loadedShown = true;
   loadedSequence();
 }
@@ -549,7 +549,7 @@ async function showDesktop(){
   try { applyManifest(manifestResult); } catch(e){}
   try { await Promise.race([checksPromise, sleep(9000)]); } catch(e){}
   if (!Array.isArray(bootErrors)) bootErrors = [];
-  try { await Promise.race([preloadWall(), sleep(6000)]); } catch(e){}
+  try { await Promise.race([preloadAll(), sleep(20000)]); } catch(e){}
   loading.classList.remove('in');
   loading.classList.add('out');
   playStartup();
@@ -1823,6 +1823,27 @@ function preloadWall(){
       if (im.decode) im.decode().then(done).catch(() => {});
     } catch(e){ clearTimeout(to); res(); }
   });
+}
+function preloadAll(){
+  const seen = {};
+  const imgs = [];
+  const add = u => { if (u && !seen[u]){ seen[u] = true; imgs.push(u); } };
+  collectImgs().forEach(n => add(imgSrc(n)));
+  (MANI.documents || []).forEach(n => add(imgSrc(n)));
+  add(imgSrc('wallpaper/wallpaper.jpg'));
+  ['asexual', 'bisexual', 'gay', 'genderfluid', 'lesbian', 'nonbinary', 'pansexual', 'transgender'].forEach(f => add(imgSrc('flags/' + f + '.png')));
+  Object.keys(APPS).forEach(id => { if (APPS[id].icon) add(APPS[id].icon); });
+  add('assets/icons/prev.svg'); add('assets/icons/next.svg');
+  add('fav-icon.png');
+  const tracks = [];
+  const mn = nodeAt(['Home', 'Music']);
+  if (mn && mn.children) Object.keys(mn.children).forEach(k => { if (mn.children[k].t === 'mp3') tracks.push(mp3Src(k)); });
+  (MANI.music || []).forEach(n => { const u = mp3Src(n); if (tracks.indexOf(u) === -1) tracks.push(u); });
+  const jobs = imgs.map(u => probeImage(u, 4000).then(() => bumpProg(), () => bumpProg()));
+  tracks.forEach(u => jobs.push(probeAudio(u, 6000).then(() => bumpProg(), () => bumpProg())));
+  jobs.push(((document.fonts && document.fonts.ready) ? Promise.race([document.fonts.ready, sleep(4000)]) : Promise.resolve()).then(() => bumpProg(), () => bumpProg()));
+  bootTotal += jobs.length + 1;
+  return Promise.all(jobs).then(() => preloadWall()).then(() => { assetsReady = true; bumpProg(); });
 }
 
 function mountPaint(w){
