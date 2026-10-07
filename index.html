@@ -1825,7 +1825,7 @@ function preloadWall(){
     } catch(e){ clearTimeout(to); res(); }
   });
 }
-function preloadAll(){
+async function preloadAll(){
   const seen = {};
   const imgs = [];
   const add = u => { if (u && !seen[u]){ seen[u] = true; imgs.push(u); } };
@@ -1844,12 +1844,21 @@ function preloadAll(){
   const esc = s => String(s).replace(/</g, '&lt;');
   const total = imgs.length + tracks.length + 1;
   const each = Math.max(0.1, (100 - bootDone) / total);
-  const note = u => blog('Loading ' + esc(u));
-  const jobs = imgs.map(u => { note(u); return probeImage(u, 4000).then(() => bumpProg(each), () => bumpProg(each)); });
-  tracks.forEach(u => { note(u); jobs.push(probeAudio(u, 6000).then(() => bumpProg(each), () => bumpProg(each))); });
-  note('font');
-  jobs.push(((document.fonts && document.fonts.ready) ? Promise.race([document.fonts.ready, sleep(4000)]) : Promise.resolve()).then(() => bumpProg(each), () => bumpProg(each)));
-  return Promise.all(jobs).then(() => preloadWall()).then(() => { blog('Loaded!'); assetsReady = true; bumpProg(each); });
+  for (const u of imgs){
+    blog('Loading ' + esc(u));
+    try { await probeImage(u, 4000); blog('Loaded ' + esc(u)); } catch(e){}
+    bumpProg(each);
+  }
+  for (const u of tracks){
+    blog('Loading ' + esc(u));
+    try { await probeAudio(u, 6000); blog('Loaded ' + esc(u)); } catch(e){}
+    bumpProg(each);
+  }
+  blog('Loading font');
+  try { await ((document.fonts && document.fonts.ready) ? Promise.race([document.fonts.ready, sleep(4000)]) : Promise.resolve()); } catch(e){}
+  bumpProg(each);
+  await preloadWall();
+  blog('Loaded!'); assetsReady = true; bumpProg(each);
 }
 
 function mountPaint(w){
