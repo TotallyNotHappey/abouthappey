@@ -169,8 +169,9 @@ async function runChecks(){
 }
 let checksPromise = null, desktopShown = false;
 async function doBoot(){
-  bootTotal = Object.keys(SFX).length + 10;
-  bootDone = 0; loadedShown = false;
+  bootTotal = 100;
+  bootDone = 0; loadedShown = false; assetsReady = false;
+  blog('Booting up HappeyOS v2.1...');
   try { applyWall(); } catch(e){}
   try { manifestPromise = loadManifest().then(m => { manifestResult = m; bumpProg(); }).catch(() => { bumpProg(); }); } catch(e){}
   try { checksPromise = runChecks().then(b => { bootErrors = b; }).catch(() => null); } catch(e){}
@@ -182,8 +183,8 @@ async function doBoot(){
 }
 const FADE_MS = 2500;
 let bootDone = 0, bootTotal = 1, loadedShown = false, assetsReady = false;
-function bumpProg(){
-  bootDone++;
+function bumpProg(n){
+  bootDone += (n === undefined ? 1 : n);
   pbar.style.width = Math.min(100, bootDone / bootTotal * 100) + '%';
   maybeLoaded();
 }
@@ -200,7 +201,6 @@ function loadedSequence(){
 function finishBoot(){
   if (booted) return;
   booted = true;
-  bootEl.style.display = 'none';
   loading.classList.add('show');
   void loading.offsetWidth;
   loading.classList.add('in');
@@ -552,6 +552,7 @@ async function showDesktop(){
   try { await Promise.race([preloadAll(), sleep(20000)]); } catch(e){}
   loading.classList.remove('in');
   loading.classList.add('out');
+  bootEl.style.display = 'none';
   playStartup();
   setTimeout(() => { loading.classList.remove('show'); loading.classList.remove('out'); }, FADE_MS + 100);
   if (IS_MOBILE){ showMobile(); return; }
@@ -1829,7 +1830,7 @@ function preloadAll(){
   const imgs = [];
   const add = u => { if (u && !seen[u]){ seen[u] = true; imgs.push(u); } };
   collectImgs().forEach(n => add(imgSrc(n)));
-  (MANI.documents || []).forEach(n => add(imgSrc(n)));
+  ((manifestResult || {}).documents || []).forEach(n => add(imgSrc(n)));
   add(imgSrc('wallpaper/wallpaper.jpg'));
   ['asexual', 'bisexual', 'gay', 'genderfluid', 'lesbian', 'nonbinary', 'pansexual', 'transgender'].forEach(f => add(imgSrc('flags/' + f + '.png')));
   Object.keys(APPS).forEach(id => { if (APPS[id].icon) add(APPS[id].icon); });
@@ -1838,12 +1839,17 @@ function preloadAll(){
   const tracks = [];
   const mn = nodeAt(['Home', 'Music']);
   if (mn && mn.children) Object.keys(mn.children).forEach(k => { if (mn.children[k].t === 'mp3') tracks.push(mp3Src(k)); });
-  (MANI.music || []).forEach(n => { const u = mp3Src(n); if (tracks.indexOf(u) === -1) tracks.push(u); });
-  const jobs = imgs.map(u => probeImage(u, 4000).then(() => bumpProg(), () => bumpProg()));
-  tracks.forEach(u => jobs.push(probeAudio(u, 6000).then(() => bumpProg(), () => bumpProg())));
-  jobs.push(((document.fonts && document.fonts.ready) ? Promise.race([document.fonts.ready, sleep(4000)]) : Promise.resolve()).then(() => bumpProg(), () => bumpProg()));
-  bootTotal += jobs.length + 1;
-  return Promise.all(jobs).then(() => preloadWall()).then(() => { assetsReady = true; bumpProg(); });
+  (((manifestResult || {}).music) || []).forEach(n => { const u = mp3Src(n); if (tracks.indexOf(u) === -1) tracks.push(u); });
+  blog('Loading assets...');
+  const esc = s => String(s).replace(/</g, '&lt;');
+  const total = imgs.length + tracks.length + 1;
+  const each = Math.max(0.1, (100 - bootDone) / total);
+  const note = u => blog('Loading ' + esc(u));
+  const jobs = imgs.map(u => { note(u); return probeImage(u, 4000).then(() => bumpProg(each), () => bumpProg(each)); });
+  tracks.forEach(u => { note(u); jobs.push(probeAudio(u, 6000).then(() => bumpProg(each), () => bumpProg(each))); });
+  note('font');
+  jobs.push(((document.fonts && document.fonts.ready) ? Promise.race([document.fonts.ready, sleep(4000)]) : Promise.resolve()).then(() => bumpProg(each), () => bumpProg(each)));
+  return Promise.all(jobs).then(() => preloadWall()).then(() => { blog('Loaded!'); assetsReady = true; bumpProg(each); });
 }
 
 function mountPaint(w){
