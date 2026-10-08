@@ -39,6 +39,8 @@
   #progressBar { height:100%; width:0%; background:#fff; transition:width .3s cubic-bezier(0, 0, 0.58, 1.0); }
   #loadedMsg { display:none; font-family:'Deltarune',monospace; font-size:18px; color:#fff; margin-top:2px; }
   #loadedMsg.show { display:block; }
+  #loadskip { font-family:inherit; font-size:12px; padding:6px 22px; background:#fff; border:1px solid #999; cursor:pointer; color:#000; margin-top:4px; }
+  #loadskip:hover { background:#cce8ff; border-color:#0078D7; }
   
   #desktop { display:none; position:fixed; inset:0; overflow:hidden; opacity:0; transition:opacity 2.5s cubic-bezier(0, 0, 0.58, 1.0); }
   #desktop.show { opacity:1; }
