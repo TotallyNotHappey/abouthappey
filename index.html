@@ -16,7 +16,7 @@
   <img src="fav-icon.png" alt="HappeyOS">
   <div class="lname">HappeyOS</div>
   <div class="progress-container"><div id="progressBar"></div></div>
-  <div id="loadedMsg">Loaded</div>
+  <div id="loadedMsg">Loaded!</div>
   <button id="loadskip" style="display:none;">Skip</button>
 </div>
 
@@ -103,12 +103,13 @@ function blog(html){
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 window.addEventListener('error', e => {
-  if (!booted && bootlog){
+  try {
     const d = document.createElement('div');
     d.style.color = '#ff5555';
-    d.textContent = 'boot error: ' + (e.message || e.error);
+    d.textContent = 'error: ' + (e.message || (e.error && e.error.message) || e.error || e);
     bootlog.appendChild(d);
-  }
+    bootEl.scrollTop = bootEl.scrollHeight;
+  } catch(_){}
 });
 function probeAudio(src, ms){
   return new Promise(res => {
@@ -152,29 +153,29 @@ function probeStorage(){
     return ok;
   } catch(e){ return false; }
 }
+function setBar(p){ pbar.style.width = Math.min(100, Math.max(0, p)) + '%'; }
+let barPct = 0;
+function addBar(n){ barPct += n; setBar(barPct); }
 async function runChecks(){
   const fails = [];
-  const ck = async (label, p) => {
+  const list = [['localStorage', Promise.resolve(probeStorage())], ['font deltarune.ttf', probeFont()]];
+  Object.keys(SFX).forEach(k => list.push(['sound ' + SFX[k], probeAudio(SFX[k])]));
+  ['profile.png', 'happeycupcake.png', 'unorender.png', 'allblackfits.png', 'hi.jpg', 'guy.gif'].forEach(n => list.push(['image ' + n, probeImage(imgSrc(n))]));
+  list.push(['icon fav-icon.png', probeImage('fav-icon.png')]);
+  const per = 20 / list.length;
+  await Promise.all(list.map(([label, p]) => (async () => {
     let r = false;
     try { r = await p; } catch(e){ r = false; }
     if (r !== 'skip' && !r) fails.push(label);
-    bumpProg();
-    return r;
-  };
-  const jobs = [ck('localStorage', Promise.resolve(probeStorage())), ck('font deltarune.ttf', probeFont())];
-  Object.keys(SFX).forEach(k => jobs.push(ck('sound ' + SFX[k], probeAudio(SFX[k]))));
-  ['profile.png', 'happeycupcake.png', 'unorender.png', 'allblackfits.png', 'hi.jpg', 'guy.gif'].forEach(n => jobs.push(ck('image ' + n, probeImage(imgSrc(n)))));
-  jobs.push(ck('icon fav-icon.png', probeImage('fav-icon.png')));
-  await Promise.all(jobs);
+    addBar(per);
+  })()));
   return fails;
 }
-let checksPromise = null, desktopShown = false;
+let desktopShown = false;
 async function doBoot(){
-  bootTotal = 100;
-  bootDone = 0; loadedShown = false; assetsReady = false;
+  barPct = 0; setBar(0);
   try { applyWall(); } catch(e){}
-  try { manifestPromise = loadManifest().then(m => { manifestResult = m; bumpProg(); }).catch(() => { bumpProg(); }); } catch(e){}
-  try { checksPromise = runChecks().then(b => { bootErrors = b; }).catch(() => null); } catch(e){}
+  try { manifestPromise = loadManifest().then(m => { manifestResult = m; }).catch(() => null); } catch(e){}
   try { loadCharacters().catch(() => null); } catch(e){}
   try { loadGuide().catch(() => null); } catch(e){}
   await sleep(500);
@@ -182,30 +183,13 @@ async function doBoot(){
   finishBoot();
 }
 const FADE_MS = 2500;
-let bootDone = 0, bootTotal = 1, loadedShown = false, assetsReady = false;
-function bumpProg(n){
-  bootDone += (n === undefined ? 1 : n);
-  pbar.style.width = Math.min(100, bootDone / bootTotal * 100) + '%';
-  maybeLoaded();
-}
-function maybeLoaded(){
-  if (loadedShown || !booted || !assetsReady || bootDone < bootTotal) return;
-  loadedShown = true;
-  loadedSequence();
-}
-function loadedSequence(){
-  document.getElementById('loadedMsg').classList.add('show');
-  playStartup();
-  setTimeout(() => showDesktop(), 2300);
-}
 function finishBoot(){
   if (booted) return;
   booted = true;
   loading.classList.add('show');
   void loading.offsetWidth;
   loading.classList.add('in');
-  maybeLoaded();
-  setTimeout(() => { if (!desktopShown) showDesktop(); }, 15000);
+  showDesktop();
 }
 document.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && !desktopShown) { skipped = true; if (!booted) finishBoot(); else showDesktop(); }
@@ -247,18 +231,30 @@ function sfx(n, vol){
     if (p && p.catch) p.catch(() => { sfxActive[n] = Math.max((sfxActive[n] || 1) - 1, 0); });
   } catch(e){}
 }
-let startupPlayed = false;
+let startupPlayed = false, startupArmed = false;
 function playStartup(){
   if (startupPlayed || IS_MOBILE) return;
   if (muted){ startupPlayed = true; return; }
+  const armGesture = () => {
+    if (startupPlayed || startupArmed) return;
+    startupArmed = true;
+    const go = () => {
+      document.removeEventListener('pointerdown', go);
+      document.removeEventListener('keydown', go);
+      startupArmed = false;
+      playStartup();
+    };
+    document.addEventListener('pointerdown', go);
+    document.addEventListener('keydown', go);
+  };
   try {
     let a = sfxCache.startup;
     if (!a){ a = new Audio(SFX.startup); sfxCache.startup = a; }
     a.volume = 0.55 * (SET.vol === undefined ? 1 : SET.vol / 100);
     const p = a.play();
-    if (p && p.then) p.then(() => { startupPlayed = true; }).catch(() => {});
+    if (p && p.then) p.then(() => { startupPlayed = true; }).catch(() => armGesture());
     else startupPlayed = true;
-  } catch(e){}
+  } catch(e){ armGesture(); }
 }
 function imgSrc(nm){ return 'assets/images/' + nm; }
 function mp3Src(nm){ return 'assets/music/' + encodeURIComponent(nm || ''); }
@@ -543,19 +539,31 @@ function refreshFilesWindows(){
 async function showDesktop(){
   if (desktopShown) return;
   desktopShown = true;
-  if (SET.showIcons === false){ SET.showIcons = true; setSave(); }
-  applyWall();
-  try { await Promise.race([manifestPromise, sleep(4000)]); } catch(e){}
+  try {
+    if (SET.showIcons === false){ SET.showIcons = true; setSave(); }
+    applyWall();
+  try { await Promise.race([manifestPromise, sleep(2500)]); } catch(e){}
   try { applyManifest(manifestResult); } catch(e){}
-  try { await Promise.race([checksPromise, sleep(9000)]); } catch(e){}
   if (!Array.isArray(bootErrors)) bootErrors = [];
+  try {
+    const fails = await Promise.race([runChecks(), sleep(8000)]);
+    if (Array.isArray(fails)) bootErrors = fails;
+  } catch(e){}
   try { await Promise.race([preloadAll(), sleep(20000)]); } catch(e){}
+  playStartup();
+  await sleep(500);
+  document.getElementById('loadedMsg').classList.add('show');
   await sleep(1000);
+  } catch(e){
+    desktopShown = false;
+    blog('boot failed: ' + String((e && e.message) || e));
+    setTimeout(() => { if (!desktopShown) showDesktop(); }, 3000);
+    return;
+  }
   loading.classList.remove('in');
   loading.classList.add('out');
-  bootEl.style.display = 'none';
-  playStartup();
-  setTimeout(() => { loading.classList.remove('show'); loading.classList.remove('out'); }, FADE_MS + 100);
+  bootEl.classList.add('out');
+  setTimeout(() => { loading.classList.remove('show'); loading.classList.remove('out'); bootEl.style.display = 'none'; bootEl.classList.remove('out'); }, FADE_MS + 100);
   if (IS_MOBILE){ showMobile(); return; }
   desktop.style.display = 'block';
   void desktop.offsetWidth;
@@ -1834,7 +1842,7 @@ async function preloadAll(){
   ((manifestResult || {}).documents || []).forEach(n => add(imgSrc(n)));
   add(imgSrc('wallpaper/wallpaper.jpg'));
   ['asexual', 'bisexual', 'gay', 'genderfluid', 'lesbian', 'nonbinary', 'pansexual', 'transgender'].forEach(f => add(imgSrc('flags/' + f + '.png')));
-  Object.keys(APPS).forEach(id => { if (APPS[id].icon) add(APPS[id].icon); });
+  Object.keys(APPS).forEach(id => { if (typeof APPS[id].icon === 'string') add(APPS[id].icon); });
   add('assets/icons/prev.svg'); add('assets/icons/next.svg');
   add('fav-icon.png');
   const tracks = [];
@@ -1844,34 +1852,28 @@ async function preloadAll(){
   blog('Loading assets...');
   const esc = s => String(s).replace(/</g, '&lt;');
   const total = imgs.length + tracks.length + 1;
-  const each = Math.max(0.1, (100 - bootDone) / total);
-  let loadedAny = false, skipPreload = false;
+  const each = Math.max(0.1, 80 / total);
+  let skipPreload = false;
   const skipBtn = document.getElementById('loadskip');
-  skipBtn.style.display = 'none';
+  skipBtn.style.display = '';
   skipBtn.onclick = () => { skipPreload = true; skipBtn.style.display = 'none'; try { sfx('click'); } catch(e){} };
-  const skipTimer = setTimeout(() => { if (!loadedAny) skipBtn.style.display = ''; }, 2500);
-  const mark = () => { loadedAny = true; bumpProg(each); };
   for (const u of imgs){
     if (skipPreload) break;
-    blog('Loading ' + esc(u));
     try { await probeImage(u, 1200); blog('Loaded ' + esc(u)); } catch(e){}
-    mark();
+    addBar(each);
   }
   for (const u of tracks){
     if (skipPreload) break;
-    blog('Loading ' + esc(u));
     try { await probeAudio(u, 2000); blog('Loaded ' + esc(u)); } catch(e){}
-    mark();
+    addBar(each);
   }
   if (!skipPreload){
-    blog('Loading font');
     try { await ((document.fonts && document.fonts.ready) ? Promise.race([document.fonts.ready, sleep(4000)]) : Promise.resolve()); } catch(e){}
-    mark();
+    addBar(each);
     await preloadWall();
   }
-  clearTimeout(skipTimer);
   skipBtn.style.display = 'none';
-  blog(skipPreload ? 'Skipped.' : 'Loaded!'); assetsReady = true; bumpProg(each);
+  blog(skipPreload ? 'Skipped.' : 'Loaded!'); assetsReady = true; addBar(each);
 }
 
 function mountPaint(w){
