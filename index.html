@@ -171,7 +171,6 @@ let checksPromise = null, desktopShown = false;
 async function doBoot(){
   bootTotal = 100;
   bootDone = 0; loadedShown = false; assetsReady = false;
-  blog('Booting up HappeyOS v2.1...');
   try { applyWall(); } catch(e){}
   try { manifestPromise = loadManifest().then(m => { manifestResult = m; bumpProg(); }).catch(() => { bumpProg(); }); } catch(e){}
   try { checksPromise = runChecks().then(b => { bootErrors = b; }).catch(() => null); } catch(e){}
