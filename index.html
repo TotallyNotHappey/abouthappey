@@ -17,6 +17,7 @@
   <div class="lname">HappeyOS</div>
   <div class="progress-container"><div id="progressBar"></div></div>
   <div id="loadedMsg">Loaded</div>
+  <button id="loadskip" style="display:none;">Skip</button>
 </div>
 
 <div id="mobile">
@@ -549,6 +550,7 @@ async function showDesktop(){
   try { await Promise.race([checksPromise, sleep(9000)]); } catch(e){}
   if (!Array.isArray(bootErrors)) bootErrors = [];
   try { await Promise.race([preloadAll(), sleep(20000)]); } catch(e){}
+  await sleep(1000);
   loading.classList.remove('in');
   loading.classList.add('out');
   bootEl.style.display = 'none';
@@ -1843,21 +1845,33 @@ async function preloadAll(){
   const esc = s => String(s).replace(/</g, '&lt;');
   const total = imgs.length + tracks.length + 1;
   const each = Math.max(0.1, (100 - bootDone) / total);
+  let loadedAny = false, skipPreload = false;
+  const skipBtn = document.getElementById('loadskip');
+  skipBtn.style.display = 'none';
+  skipBtn.onclick = () => { skipPreload = true; skipBtn.style.display = 'none'; try { sfx('click'); } catch(e){} };
+  const skipTimer = setTimeout(() => { if (!loadedAny) skipBtn.style.display = ''; }, 2500);
+  const mark = () => { loadedAny = true; bumpProg(each); };
   for (const u of imgs){
+    if (skipPreload) break;
     blog('Loading ' + esc(u));
-    try { await probeImage(u, 4000); blog('Loaded ' + esc(u)); } catch(e){}
-    bumpProg(each);
+    try { await probeImage(u, 1200); blog('Loaded ' + esc(u)); } catch(e){}
+    mark();
   }
   for (const u of tracks){
+    if (skipPreload) break;
     blog('Loading ' + esc(u));
-    try { await probeAudio(u, 6000); blog('Loaded ' + esc(u)); } catch(e){}
-    bumpProg(each);
+    try { await probeAudio(u, 2000); blog('Loaded ' + esc(u)); } catch(e){}
+    mark();
   }
-  blog('Loading font');
-  try { await ((document.fonts && document.fonts.ready) ? Promise.race([document.fonts.ready, sleep(4000)]) : Promise.resolve()); } catch(e){}
-  bumpProg(each);
-  await preloadWall();
-  blog('Loaded!'); assetsReady = true; bumpProg(each);
+  if (!skipPreload){
+    blog('Loading font');
+    try { await ((document.fonts && document.fonts.ready) ? Promise.race([document.fonts.ready, sleep(4000)]) : Promise.resolve()); } catch(e){}
+    mark();
+    await preloadWall();
+  }
+  clearTimeout(skipTimer);
+  skipBtn.style.display = 'none';
+  blog(skipPreload ? 'Skipped.' : 'Loaded!'); assetsReady = true; bumpProg(each);
 }
 
 function mountPaint(w){
